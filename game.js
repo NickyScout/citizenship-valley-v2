@@ -1396,11 +1396,11 @@ const PROP_ASSETS = {
 
 const TILE_ASSETS = {
   grass: "assets/tiles/tile-grass.png",
-  road: "assets/tiles/tile-road.svg",
-  plaza: "assets/tiles/tile-plaza.svg",
-  water: "assets/tiles/tile-water.svg",
-  dock: "assets/tiles/tile-dock.svg",
-  wall: "assets/tiles/tile-wall.svg"
+  road: "assets/tiles/tile-road.png",
+  plaza: "assets/tiles/tile-plaza.png",
+  water: "assets/tiles/tile-water.png",
+  dock: "assets/tiles/tile-dock.png",
+  wall: "assets/tiles/tile-wall.png"
 };
 
 // Stage 1D: pixel-art oak sprite for free-standing scenery trees (falls back to drawBigTree).

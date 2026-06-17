@@ -12,16 +12,23 @@ function Save-Png($bmp, $path) {
   $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
 }
 
-# --- GRASS: opaque 1254 -> 48x48, high-quality downscale (no transparency needed) ---
-$grassSrc = [System.Drawing.Bitmap]::FromFile((Join-Path $srcDir "grass.png"))
-$grass = New-Object System.Drawing.Bitmap 48, 48, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-$g = [System.Drawing.Graphics]::FromImage($grass)
-$g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-$g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
-$g.DrawImage($grassSrc, (New-Object System.Drawing.Rectangle 0, 0, 48, 48))
-$g.Dispose()
-Save-Png $grass (Join-Path $outDir "tile-grass.png")
-"grass -> tile-grass.png 48x48"
+# --- Opaque 48x48 ground tiles: high-quality downscale (no transparency) ---
+# Maps raw source filename -> runtime TILE_ASSETS filename.
+$tiles = @{ "grass" = "tile-grass"; "road" = "tile-road"; "plaza" = "tile-plaza"; "water" = "tile-water"; "dock" = "tile-dock"; "wall" = "tile-wall" }
+foreach ($name in $tiles.Keys) {
+  $srcPath = Join-Path $srcDir "$name.png"
+  if (-not (Test-Path $srcPath)) { "skip $name (no source)"; continue }
+  $src = [System.Drawing.Bitmap]::FromFile($srcPath)
+  $bmp = New-Object System.Drawing.Bitmap 48, 48, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+  $gg = [System.Drawing.Graphics]::FromImage($bmp)
+  $gg.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+  $gg.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+  $gg.DrawImage($src, (New-Object System.Drawing.Rectangle 0, 0, 48, 48))
+  $gg.Dispose()
+  Save-Png $bmp (Join-Path $outDir "$($tiles[$name]).png")
+  "$name -> $($tiles[$name]).png 48x48"
+  $src.Dispose(); $bmp.Dispose()
+}
 
 # --- TREE: cut magenta, crop to content, downscale to width 96 (keep aspect) ---
 $treeSrc = [System.Drawing.Bitmap]::FromFile((Join-Path $srcDir "tree.png"))
@@ -66,5 +73,5 @@ for ($y = 0; $y -lt $th; $y++) {
 Save-Png $tree (Join-Path $outDir "tree-oak.png")
 "tree -> tree-oak.png ${tw}x${th}"
 
-$grassSrc.Dispose(); $grass.Dispose(); $treeSrc.Dispose(); $full.Dispose(); $crop.Dispose(); $tree.Dispose()
+$treeSrc.Dispose(); $full.Dispose(); $crop.Dispose(); $tree.Dispose()
 "done"
