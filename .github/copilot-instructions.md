@@ -26,6 +26,7 @@ Important files:
 - `docs/AI_HANDOFF.md` - detailed handoff context for future coding agents
 - `docs/PROJECT_FEATURES.md` - consolidated current features and characteristics
 - `docs/DEVELOPMENT_HISTORY.md` - condensed build history, key decisions, and forward roadmap
+- `docs/DEVELOPMENT_PLAN.md` - active V2 staged development plan with QA gates
 - `AGENTS.md` - practical repository instructions for agents
 
 Manual deploy target:

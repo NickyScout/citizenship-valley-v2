@@ -82,6 +82,7 @@ Rendering uses a `1280x768` canvas. The logical tile size is `32`, rendered at `
 - `README.md` - short project overview and play instructions.
 - `docs/PROJECT_FEATURES.md` - consolidated description of current features and characteristics.
 - `docs/DEVELOPMENT_HISTORY.md` - condensed build history, key decisions, art-direction principles, and the forward roadmap.
+- `docs/DEVELOPMENT_PLAN.md` - active V2 staged development plan (terrain → hero → NPCs → buildings → UI → mini-games → learning → polish), with QA gates.
 - `docs/QA_RUNBOOK.md` - canonical local QA command set.
 - `docs/MAP_AUDIT.md` - generated Map Phase 1 audit of spawn, landmarks, NPCs, doors, mini-game anchors, travel gates, blocked zones, interiors, and exam rooms.
 - `docs/BALANCE_REVIEW.md` - latest XP/Focus/coin/readiness balance notes.
@@ -238,6 +239,6 @@ See `docs/DEVELOPMENT_HISTORY.md` → "Key design decisions" and "Hard-won lesso
 
 ## 10. Next Recommended Task
 
-Continue the V2 new-graphics overhaul per the roadmap in `docs/DEVELOPMENT_HISTORY.md` (play-field first). Work in small, QA-gated steps; bump the semantic version (`2.0.x`) and deploy only on explicit request.
+Continue the V2 new-graphics overhaul per the staged plan in `docs/DEVELOPMENT_PLAN.md` (play-field first: V2-1 terrain/greenery → V2-2 hero → V2-3 NPC art). Work in small, QA-gated steps; bump the semantic version (`2.0.x`) and deploy only on explicit request.
 
 Keep `scripts/qa-route-audit.js --write`, `node scripts\validate-world.js`, `node qa-visual-smoke.mjs`, and regional playthrough scripts in the release checklist after future map changes.
