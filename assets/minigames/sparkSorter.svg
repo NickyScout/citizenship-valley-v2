@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Spark sorter bench">
+  <defs>
+    <linearGradient id="ssSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c2c3b"/>
+      <stop offset="1" stop-color="#0f181f"/>
+    </linearGradient>
+  </defs>
+  <rect width="360" height="120" fill="url(#ssSky)"/>
+  <!-- centre divider -->
+  <line x1="180" y1="20" x2="180" y2="120" stroke="rgba(242,193,78,.4)" stroke-width="2"/>
+  <!-- two buckets -->
+  <g font-family="Georgia, serif" font-size="11" font-weight="700" text-anchor="middle">
+    <rect x="14" y="86" width="150" height="30" rx="4" fill="#3a5a78" stroke="#5d86a8" stroke-width="2"/>
+    <text x="89" y="105" fill="#f6f1df">CRIMINAL LAW</text>
+    <rect x="196" y="86" width="150" height="30" rx="4" fill="#5a4a78" stroke="#8470a8" stroke-width="2"/>
+    <text x="271" y="105" fill="#f6f1df">CIVIL LAW</text>
+  </g>
+  <!-- falling case cards -->
+  <g font-family="Georgia, serif" font-size="12" font-weight="700" text-anchor="middle">
+    <g><rect x="40" y="30" width="104" height="28" rx="7" fill="#f6f1df" stroke="#3a2f28" stroke-width="2"/><text x="92" y="48" fill="#26313a">Assault</text></g>
+    <g><rect x="214" y="42" width="118" height="28" rx="7" fill="#f6f1df" stroke="#3a2f28" stroke-width="2"/><text x="273" y="60" fill="#26313a">Contract</text></g>
+  </g>
+  <!-- title -->
+  <text x="14" y="18" font-family="Georgia, serif" font-size="10" font-weight="700" fill="#ffe9a8">SORTING BENCH</text>
+</svg>

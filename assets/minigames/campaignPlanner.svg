@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Campaign planning board">
+  <defs>
+    <linearGradient id="cpBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a2a22"/>
+      <stop offset="1" stop-color="#101914"/>
+    </linearGradient>
+  </defs>
+  <rect width="360" height="120" fill="url(#cpBg)"/>
+  <!-- board -->
+  <rect x="14" y="14" width="332" height="92" rx="4" fill="#243b2f" stroke="#3f8a47" stroke-width="3"/>
+  <rect x="14" y="14" width="332" height="14" fill="#2f5d3a"/>
+  <text x="180" y="25" font-family="Georgia, serif" font-size="9" font-weight="700" text-anchor="middle" fill="#d7f0d9">ACTIVE CITIZENSHIP PLAN</text>
+  <!-- four step cards -->
+  <g font-family="Georgia, serif" font-size="8" font-weight="700" text-anchor="middle">
+    <g><rect x="26" y="40" width="66" height="52" rx="3" fill="#5da9e9"/><rect x="26" y="40" width="66" height="14" fill="#3f7cae"/><text x="59" y="50" fill="#fff">1 RESEARCH</text><rect x="32" y="60" width="54" height="4" fill="#cfe6fb"/><rect x="32" y="68" width="54" height="4" fill="#cfe6fb"/><rect x="32" y="76" width="40" height="4" fill="#cfe6fb"/></g>
+    <g><rect x="102" y="40" width="66" height="52" rx="3" fill="#f2c14e"/><rect x="102" y="40" width="66" height="14" fill="#caa64a"/><text x="135" y="50" fill="#3a2f10">2 PLAN</text><rect x="108" y="60" width="54" height="4" fill="#fff3d0"/><rect x="108" y="68" width="54" height="4" fill="#fff3d0"/><rect x="108" y="76" width="40" height="4" fill="#fff3d0"/></g>
+    <g><rect x="178" y="40" width="66" height="52" rx="3" fill="#e36b5d"/><rect x="178" y="40" width="66" height="14" fill="#b9433a"/><text x="211" y="50" fill="#fff">3 ACTION</text><rect x="184" y="60" width="54" height="4" fill="#ffd9d3"/><rect x="184" y="68" width="54" height="4" fill="#ffd9d3"/><rect x="184" y="76" width="40" height="4" fill="#ffd9d3"/></g>
+    <g><rect x="254" y="40" width="66" height="52" rx="3" fill="#6fbf73"/><rect x="254" y="40" width="66" height="14" fill="#3f8a47"/><text x="287" y="50" fill="#143a22">4 EVALUATE</text><rect x="260" y="60" width="54" height="4" fill="#d7f0d9"/><rect x="260" y="68" width="54" height="4" fill="#d7f0d9"/><rect x="260" y="76" width="40" height="4" fill="#d7f0d9"/></g>
+  </g>
+  <!-- arrows -->
+  <g fill="#f5f0df">
+    <path d="M93 66 l9 0 l-3 -4 l8 5 l-8 5 l3 -4 l-9 0 z"/>
+    <path d="M169 66 l9 0 l-3 -4 l8 5 l-8 5 l3 -4 l-9 0 z"/>
+    <path d="M245 66 l9 0 l-3 -4 l8 5 l-8 5 l3 -4 l-9 0 z"/>
+  </g>
+</svg>

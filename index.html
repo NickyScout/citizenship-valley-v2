@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Citizenship Valley</title>
+    <link rel="stylesheet" href="styles.css?v=2026.06.12.34">
+</head>
+
+<body data-app-version="2026.06.12.34">
+    <main class="game-shell">
+        <section class="stage" aria-label="Citizenship Valley game">
+            <canvas id="game" width="1280" height="768"></canvas>
+            <div id="appVersion" class="app-version" aria-label="App version">v2026.06.12.34</div>
+            <div id="titleScreen" class="intro-overlay hidden" aria-label="Title screen">
+                <div class="intro-card">
+                    <h2 class="intro-title">Citizenship Valley</h2>
+                    <p class="intro-sub">A GCSE Citizenship revision RPG. Restore the sparks of participation across the
+                        valley.</p>
+                    <div class="intro-buttons">
+                        <button id="titleContinueBtn" class="intro-btn intro-btn-primary"
+                            type="button">Continue</button>
+                        <button id="titleNewBtn" class="intro-btn" type="button">New Game</button>
+                        <button id="titleCreditsBtn" class="intro-btn intro-btn-ghost" type="button">Credits</button>
+                    </div>
+                    <div id="titleCredits" class="intro-credits hidden">
+                        <p>Design &amp; code: Citizenship Valley team.</p>
+                        <p>Curriculum based on UK GCSE Citizenship Studies.</p>
+                    </div>
+                </div>
+            </div>
+            <div id="customScreen" class="intro-overlay hidden" aria-label="Character customization">
+                <div class="intro-card intro-card-wide">
+                    <h2 class="intro-title">Create your citizen</h2>
+                    <label class="intro-label" for="customNameInput">Name (1–16 characters)</label>
+                    <input id="customNameInput" class="intro-input" type="text" maxlength="16" autocomplete="off"
+                        value="Citizen">
+                    <p class="intro-label">Choose a preset</p>
+                    <div id="presetGrid" class="preset-grid">
+                        <button type="button" class="preset-card is-selected" data-preset="boySchool">
+                            <span class="preset-avatar" style="background:#2f638f"><span class="preset-accent"
+                                    style="background:#e36b5d"></span><span
+                                    class="preset-hair preset-hair-boy"></span></span>
+                            <span class="preset-label">Schoolboy</span><span class="preset-sub">School Jumper</span>
+                        </button>
+                        <button type="button" class="preset-card" data-preset="boyCampaign">
+                            <span class="preset-avatar" style="background:#3f7d4f"><span class="preset-accent"
+                                    style="background:#6fbf73"></span><span
+                                    class="preset-hair preset-hair-boy"></span></span>
+                            <span class="preset-label">Campaigner</span><span class="preset-sub">Campaign Boots</span>
+                        </button>
+                        <button type="button" class="preset-card" data-preset="boyCouncil">
+                            <span class="preset-avatar" style="background:#8f4f44"><span class="preset-accent"
+                                    style="background:#f2c14e"></span><span
+                                    class="preset-hair preset-hair-boy"></span></span>
+                            <span class="preset-label">Councillor</span><span class="preset-sub">Council Cloak</span>
+                        </button>
+                        <button type="button" class="preset-card" data-preset="boyLiberty">
+                            <span class="preset-avatar" style="background:#466d9f"><span class="preset-accent"
+                                    style="background:#5da9e9"></span><span
+                                    class="preset-hair preset-hair-boy"></span></span>
+                            <span class="preset-label">Advocate</span><span class="preset-sub">Liberty Coat</span>
+                        </button>
+                        <button type="button" class="preset-card" data-preset="girlSchool">
+                            <span class="preset-avatar" style="background:#2f638f"><span class="preset-accent"
+                                    style="background:#5da9e9"></span><span
+                                    class="preset-hair preset-hair-girl"></span></span>
+                            <span class="preset-label">Schoolgirl</span><span class="preset-sub">School Jumper</span>
+                        </button>
+                        <button type="button" class="preset-card" data-preset="girlCampaign">
+                            <span class="preset-avatar" style="background:#3f7d4f"><span class="preset-accent"
+                                    style="background:#6fbf73"></span><span
+                                    class="preset-hair preset-hair-girl"></span></span>
+                            <span class="preset-label">Organiser</span><span class="preset-sub">Campaign Boots</span>
+                        </button>
+                        <button type="button" class="preset-card" data-preset="girlCouncil">
+                            <span class="preset-avatar" style="background:#8f4f44"><span class="preset-accent"
+                                    style="background:#f2c14e"></span><span
+                                    class="preset-hair preset-hair-girl"></span></span>
+                            <span class="preset-label">Speaker</span><span class="preset-sub">Council Cloak</span>
+                        </button>
+                        <button type="button" class="preset-card" data-preset="girlLiberty">
+                            <span class="preset-avatar" style="background:#466d9f"><span class="preset-accent"
+                                    style="background:#e36b5d"></span><span
+                                    class="preset-hair preset-hair-girl"></span></span>
+                            <span class="preset-label">Rights Lead</span><span class="preset-sub">Liberty Coat</span>
+                        </button>
+                    </div>
+                    <p class="intro-label">Accent colour</p>
+                    <div id="accentRow" class="swatch-row">
+                        <button type="button" class="swatch is-selected" data-accent="ember" style="background:#e36b5d"
+                            aria-label="Ember accent"></button>
+                        <button type="button" class="swatch" data-accent="ocean" style="background:#5da9e9"
+                            aria-label="Ocean accent"></button>
+                        <button type="button" class="swatch" data-accent="forest" style="background:#6fbf73"
+                            aria-label="Forest accent"></button>
+                        <button type="button" class="swatch" data-accent="amber" style="background:#f2c14e"
+                            aria-label="Amber accent"></button>
+                    </div>
+                    <div id="introError" class="intro-error hidden"></div>
+                    <div class="intro-buttons">
+                        <button id="customBackBtn" class="intro-btn intro-btn-ghost" type="button">Back</button>
+                        <button id="customStartBtn" class="intro-btn intro-btn-primary" type="button">Start
+                            adventure</button>
+                    </div>
+                </div>
+            </div>
+            <div id="inventoryPanel" class="menu-overlay hidden" role="dialog" aria-modal="true"
+                aria-labelledby="inventoryPanelTitle">
+                <div class="menu-panel inventory-panel">
+                    <div class="menu-panel-header">
+                        <div>
+                            <h2 id="inventoryPanelTitle">Backpack</h2>
+                            <p id="inventoryPanelSubtitle">Equipped items stay out of the bag.</p>
+                        </div>
+                        <button id="inventoryCloseButton" class="icon-close-button" type="button"
+                            aria-label="Close backpack">×</button>
+                    </div>
+                    <div id="inventoryPanelBody" class="backpack-layout"></div>
+                </div>
+            </div>
+            <div id="progressPanel" class="menu-overlay hidden" role="dialog" aria-modal="true"
+                aria-labelledby="progressPanelTitle">
+                <div class="menu-panel progress-panel">
+                    <div class="menu-panel-header">
+                        <div>
+                            <h2 id="progressPanelTitle">Progress Center</h2>
+                            <p>Story, quests, building notes, and achievements.</p>
+                        </div>
+                        <button id="progressCloseButton" class="icon-close-button" type="button"
+                            aria-label="Close progress">×</button>
+                    </div>
+                    <div id="progressPanelBody" class="progress-layout"></div>
+                </div>
+            </div>
+            <div id="characterPanel" class="menu-overlay hidden" role="dialog" aria-modal="true"
+                aria-labelledby="characterPanelTitle">
+                <div class="menu-panel character-panel">
+                    <div class="menu-panel-header">
+                        <div>
+                            <h2 id="characterPanelTitle">Character</h2>
+                            <p>Spend level-up points and track exam readiness.</p>
+                        </div>
+                        <button id="characterCloseButton" class="icon-close-button" type="button"
+                            aria-label="Close character panel">×</button>
+                    </div>
+                    <div id="characterPanelBody" class="character-layout"></div>
+                </div>
+            </div>
+            <div id="storyPanel" class="story-overlay hidden" role="dialog" aria-modal="true"
+                aria-labelledby="storyPanelTitle">
+                <div class="story-card">
+                    <div id="storyPanelBody" class="story-card-body"></div>
+                    <button id="storyContinueButton" class="intro-btn intro-btn-primary" type="button">Continue</button>
+                </div>
+            </div>
+            <div id="miniGamePanel" class="menu-overlay hidden" role="dialog" aria-modal="true"
+                aria-labelledby="miniGamePanelTitle">
+                <div class="menu-panel minigame-panel">
+                    <div class="menu-panel-header">
+                        <div>
+                            <h2 id="miniGamePanelTitle">Mini-game</h2>
+                            <p>Short citizenship challenges with rewards.</p>
+                        </div>
+                        <button id="miniGameCloseButton" class="icon-close-button" type="button"
+                            aria-label="Close mini-game">×</button>
+                    </div>
+                    <div id="miniGamePanelBody" class="minigame-layout"></div>
+                </div>
+            </div>
+            <div id="settingsPanel" class="menu-overlay hidden" role="dialog" aria-modal="true"
+                aria-labelledby="settingsPanelTitle">
+                <div class="menu-panel settings-panel">
+                    <div class="menu-panel-header">
+                        <div>
+                            <h2 id="settingsPanelTitle">Settings</h2>
+                            <p>Display and save options for this browser.</p>
+                        </div>
+                        <button id="settingsCloseButton" class="icon-close-button" type="button"
+                            aria-label="Close settings">×</button>
+                    </div>
+                    <div id="settingsPanelBody" class="settings-layout"></div>
+                </div>
+            </div>
+            <div id="dialogue" class="dialogue hidden" aria-live="polite"></div>
+            <div id="choicePanel" class="choice-panel hidden"></div>
+            <div id="touchControls" class="touch-controls" aria-label="Touch controls">
+                <div class="touch-dpad" aria-label="Move">
+                    <button type="button" class="touch-button touch-up" data-touch-key="w"
+                        aria-label="Move up">▲</button>
+                    <button type="button" class="touch-button touch-left" data-touch-key="a"
+                        aria-label="Move left">◀</button>
+                    <button type="button" class="touch-button touch-right" data-touch-key="d"
+                        aria-label="Move right">▶</button>
+                    <button type="button" class="touch-button touch-down" data-touch-key="s"
+                        aria-label="Move down">▼</button>
+                </div>
+                <button type="button" class="touch-action" data-touch-action="interact"
+                    aria-label="Talk or inspect">E</button>
+            </div>
+        </section>
+
+        <aside class="hud" aria-label="Player progress">
+            <div class="brand">
+                <span id="playerPortrait" class="brand-mark hero-portrait-shell" aria-label="Player portrait"></span>
+                <div>
+                    <h1>Citizenship Valley</h1>
+                    <p><span id="playerNameText">Citizen</span> · <span id="playerLevelText">Lvl 1</span></p>
+                </div>
+            </div>
+
+            <details class="meter-group hud-section" open>
+                <summary>Status</summary>
+                <div class="region">
+                    <span><i class="ico ico-pin"></i>Region</span>
+                    <strong id="regionText">Citizenship Village</strong>
+                </div>
+                <div class="wallet">
+                    <span><i class="ico ico-coin"></i>Coins</span>
+                    <strong id="coinText">0</strong>
+                </div>
+                <div class="meter-row meter-row-knowledge">
+                    <span><i class="ico ico-book"></i>Knowledge</span>
+                    <strong id="knowledgeText">0/100</strong>
+                </div>
+                <div class="meter meter-knowledge"><span id="knowledgeBar"></span></div>
+                <div class="meter-row meter-row-focus">
+                    <span><i class="ico ico-focus"></i>Focus</span>
+                    <strong id="focusText">100/100</strong>
+                </div>
+                <div class="meter meter-focus"><span id="focusBar"></span></div>
+                <div class="meter-row meter-row-xp">
+                    <span><i class="ico ico-xp"></i>XP</span>
+                    <strong id="xpText">0/20</strong>
+                </div>
+                <div class="meter meter-xp"><span id="xpBar"></span></div>
+                <div class="meter-row meter-row-readiness">
+                    <span><i class="ico ico-target"></i>Exam Readiness</span>
+                    <strong id="examReadinessText">35%</strong>
+                </div>
+                <div class="meter meter-readiness"><span id="examReadinessBar"></span></div>
+                <button id="characterOpenButton" class="reset-button" type="button">Open Character</button>
+            </details>
+
+            <details class="quest-card hud-section" open>
+                <summary>Current Quest</summary>
+                <p id="questText">Talk to the Mayor outside Town Hall.</p>
+                <button id="progressOpenButton" class="reset-button" type="button">Open Progress</button>
+                <button id="miniGameOpenButton" class="reset-button" type="button">Open Mini-games</button>
+            </details>
+
+            <details class="inventory hud-section">
+                <summary>Badges</summary>
+                <ul id="badgeList">
+                    <li>None yet</li>
+                </ul>
+            </details>
+
+            <details class="equipment hud-section">
+                <summary>Equipment</summary>
+                <dl>
+                    <div>
+                        <dt>Outfit</dt>
+                        <dd id="outfitText">School Jumper</dd>
+                    </div>
+                    <div>
+                        <dt>Tool</dt>
+                        <dd id="toolText">None</dd>
+                    </div>
+                </dl>
+            </details>
+
+            <details class="inventory hud-section" open>
+                <summary>Inventory</summary>
+                <button id="inventoryOpenButton" class="reset-button" type="button">Open Backpack</button>
+                <div id="inventoryList" class="inventory-list"></div>
+            </details>
+
+            <details class="log hud-section" open>
+                <summary>Journal</summary>
+                <p id="journalText">Earn items by helping villagers.</p>
+                <div id="reviewList" class="review-list"></div>
+                <button id="reviewButton" class="reset-button" type="button">Open Review Journal</button>
+            </details>
+
+            <details class="dev-tools hud-section">
+                <summary>Dev Travel</summary>
+                <select id="devLocationSelect" aria-label="Switch test location"></select>
+                <button id="devTravelButton" class="reset-button" type="button">Switch Location</button>
+            </details>
+
+            <details class="controls hud-section">
+                <summary>Controls</summary>
+                <p><kbd>WASD</kbd> or <kbd>Arrows</kbd> move</p>
+                <p>Touch buttons also work on mobile.</p>
+                <p><kbd>E</kbd> talk / inspect</p>
+                <p><kbd>I</kbd> open backpack</p>
+                <p><kbd>P</kbd> open progress</p>
+                <p><kbd>C</kbd> open character</p>
+                <p><kbd>G</kbd> open mini-games</p>
+                <p><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> answer</p>
+                <p><kbd>R</kbd> reset saved progress</p>
+                <p>Use item buttons in the inventory.</p>
+                <button id="settingsOpenButton" class="reset-button" type="button">Open Settings</button>
+                <button id="resetButton" class="reset-button" type="button">New Game</button>
+            </details>
+        </aside>
+    </main>
+
+    <script src="curriculum.js?v=2026.06.12.34"></script>
+    <script src="game.js?v=2026.06.12.34"></script>
+</body>
+
+</html>

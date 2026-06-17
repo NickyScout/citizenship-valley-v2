@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Petition harbour regatta">
+  <defs>
+    <linearGradient id="prSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16384a"/>
+      <stop offset="1" stop-color="#1d586b"/>
+    </linearGradient>
+  </defs>
+  <rect width="360" height="120" fill="url(#prSky)"/>
+  <!-- sun -->
+  <circle cx="306" cy="30" r="16" fill="#f6d77a" opacity=".8"/>
+  <!-- water -->
+  <rect y="64" width="360" height="56" fill="#1f6f86"/>
+  <path d="M0 64 q90 8 180 0 t180 0 v8 H0 z" fill="#2a8aa4" opacity=".7"/>
+  <path d="M0 80 q60 7 120 0 t120 0 t120 0 v10 H0 z" fill="#36a0bd" opacity=".5"/>
+  <!-- dock -->
+  <rect x="0" y="70" width="70" height="10" fill="#6f4633"/>
+  <rect x="0" y="80" width="10" height="30" fill="#5b3b2c"/>
+  <rect x="46" y="80" width="10" height="30" fill="#5b3b2c"/>
+  <!-- boat -->
+  <g>
+    <path d="M150 92 h84 l-12 20 h-60 z" fill="#8f5b3f" stroke="#5b3b2c" stroke-width="2"/>
+    <rect x="188" y="44" width="5" height="48" fill="#caa64a"/>
+    <path d="M193 46 l40 30 l-40 8 z" fill="#f5f0df" stroke="#cdbf9f" stroke-width="1.5"/>
+    <path d="M188 50 l-30 26 l30 8 z" fill="#6fbf73" stroke="#3f8a47" stroke-width="1.5"/>
+    <text x="171" y="74" font-family="Georgia, serif" font-size="9" font-weight="700" text-anchor="middle" fill="#143a22">SIGN</text>
+  </g>
+  <!-- signature buoy (green=good) -->
+  <circle cx="300" cy="86" r="11" fill="#6fbf73" stroke="#f5f0df" stroke-width="2"/>
+  <path d="M295 86 l4 4 l7 -8" fill="none" stroke="#143a22" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- rumour hazard (red) -->
+  <circle cx="110" cy="100" r="9" fill="#e36b5d" stroke="#f5f0df" stroke-width="2"/>
+  <path d="M110 95 v6 M110 104 v1" stroke="#3a1614" stroke-width="3" stroke-linecap="round"/>
+</svg>

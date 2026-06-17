@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="title desc">
+  <title id="title">School Backpack</title>
+  <desc id="desc">A sturdy school backpack with front pocket.</desc>
+  <rect width="48" height="48" rx="6" fill="#182124"/>
+  <path d="M18 12c0-5 12-5 12 0" fill="none" stroke="#241b12" stroke-width="4" stroke-linecap="round"/>
+  <rect x="12" y="12" width="24" height="28" rx="6" fill="#9a6a3a" stroke="#241b12" stroke-width="3"/>
+  <rect x="16" y="24" width="16" height="11" rx="2" fill="#c18455" stroke="#241b12" stroke-width="2"/>
+  <path d="M16 17h16M18 29h12" stroke="#f2c14e" stroke-width="2" stroke-linecap="round"/>
+  <path d="M12 18l-4 8M36 18l4 8" stroke="#5b392f" stroke-width="3" stroke-linecap="round"/>
+</svg>

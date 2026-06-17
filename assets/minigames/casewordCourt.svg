@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Courtroom evidence word board">
+  <defs>
+    <linearGradient id="ccBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a2540"/>
+      <stop offset="1" stop-color="#15101f"/>
+    </linearGradient>
+  </defs>
+  <rect width="360" height="120" fill="url(#ccBg)"/>
+  <!-- evidence board -->
+  <rect x="14" y="12" width="240" height="96" rx="4" fill="#222b3a" stroke="#b089d6" stroke-width="3"/>
+  <rect x="14" y="12" width="240" height="14" fill="#3a3357"/>
+  <text x="134" y="23" font-family="Georgia, serif" font-size="9" font-weight="700" text-anchor="middle" fill="#e7defb">EVIDENCE BOARD</text>
+  <!-- term tiles spelling J U _ _ -->
+  <g font-family="Georgia, serif" font-size="16" font-weight="700" text-anchor="middle">
+    <g><rect x="40" y="42" width="30" height="34" rx="3" fill="#f5f0df" stroke="#caa64a" stroke-width="2"/><text x="55" y="66" fill="#26313a">J</text></g>
+    <g><rect x="76" y="42" width="30" height="34" rx="3" fill="#f5f0df" stroke="#caa64a" stroke-width="2"/><text x="91" y="66" fill="#26313a">U</text></g>
+    <g><rect x="112" y="42" width="30" height="34" rx="3" fill="#2e2b40" stroke="#5a5378" stroke-width="2"/><text x="127" y="66" fill="#7a719c">?</text></g>
+    <g><rect x="148" y="42" width="30" height="34" rx="3" fill="#2e2b40" stroke="#5a5378" stroke-width="2"/><text x="163" y="66" fill="#7a719c">?</text></g>
+  </g>
+  <!-- pinned cards -->
+  <g transform="rotate(-7 205 50)"><rect x="190" y="36" width="46" height="30" rx="2" fill="#cfe6fb" stroke="#5da9e9" stroke-width="2"/><rect x="195" y="42" width="36" height="3" fill="#7fa8c4"/><rect x="195" y="48" width="36" height="3" fill="#7fa8c4"/><rect x="195" y="54" width="24" height="3" fill="#7fa8c4"/></g>
+  <!-- caution meter -->
+  <g>
+    <text x="40" y="98" font-family="Georgia, serif" font-size="8" font-weight="700" fill="#e7defb">CASE FILE</text>
+    <rect x="100" y="90" width="120" height="9" rx="3" fill="#15101f" stroke="#b089d6" stroke-width="1.5"/>
+    <rect x="102" y="92" width="70" height="5" rx="2" fill="#b089d6"/>
+  </g>
+  <!-- scales of justice -->
+  <g transform="translate(305 60)">
+    <rect x="-2" y="-30" width="4" height="58" fill="#caa64a"/>
+    <rect x="-22" y="28" width="44" height="7" rx="2" fill="#caa64a"/>
+    <circle cx="0" cy="-30" r="5" fill="#f2c14e"/>
+    <line x1="-26" y1="-26" x2="26" y2="-26" stroke="#f2c14e" stroke-width="4"/>
+    <path d="M-26 -26 l-8 16 a10 6 0 0 0 16 0 z" fill="#665a7d" stroke="#b089d6" stroke-width="1.5"/>
+    <path d="M26 -26 l-8 16 a10 6 0 0 0 16 0 z" fill="#665a7d" stroke="#b089d6" stroke-width="1.5"/>
+  </g>
+</svg>

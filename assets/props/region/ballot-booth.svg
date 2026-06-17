@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Ballot booth</title>
+  <desc id="desc">A small voting booth prop for Democracy Capital.</desc>
+  <rect width="64" height="64" rx="6" fill="#182124"/>
+  <rect x="10" y="14" width="44" height="34" rx="3" fill="#d8b36a" stroke="#241b12" stroke-width="3"/>
+  <rect x="14" y="18" width="36" height="6" fill="#8f4f44"/>
+  <rect x="20" y="29" width="24" height="14" fill="#f5f0df" stroke="#241b12" stroke-width="2"/>
+  <path d="M24 36l4 4 9-10" fill="none" stroke="#466d9f" stroke-width="3" stroke-linecap="round"/>
+  <rect x="14" y="48" width="8" height="10" fill="#513b35"/>
+  <rect x="42" y="48" width="8" height="10" fill="#513b35"/>
+</svg>

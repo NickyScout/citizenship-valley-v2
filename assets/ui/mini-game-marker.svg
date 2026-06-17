@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 32" role="img" aria-labelledby="title desc">
+  <title id="title">Mini-game marker</title>
+  <desc id="desc">A small blue game marker with gold controls.</desc>
+  <rect x="1" y="9" width="62" height="22" rx="4" fill="#111719" stroke="#f2c14e" stroke-width="2"/>
+  <rect x="20" y="1" width="24" height="14" rx="3" fill="#5da9e9" stroke="#141c1f" stroke-width="2"/>
+  <circle cx="17" cy="20" r="3" fill="#f2c14e"/>
+  <circle cx="47" cy="20" r="3" fill="#f2c14e"/>
+  <path d="M28 8h8" stroke="#141c1f" stroke-width="2"/>
+  <text x="32" y="25" fill="#f5f0df" font-family="Georgia, serif" font-size="10" text-anchor="middle">Game</text>
+</svg>

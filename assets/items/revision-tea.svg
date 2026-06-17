@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="title desc">
+  <title id="title">Revision Tea</title>
+  <desc id="desc">A small cup of tea with steam for restoring focus.</desc>
+  <rect width="48" height="48" rx="6" fill="#182124"/>
+  <ellipse cx="24" cy="36" rx="17" ry="4" fill="#050708" opacity="0.45"/>
+  <path d="M11 20h24v9c0 6-5 10-12 10s-12-4-12-10z" fill="#f5f0df" stroke="#241b12" stroke-width="3"/>
+  <path d="M35 23h5c3 0 5 2 5 5s-2 5-5 5h-4" fill="none" stroke="#241b12" stroke-width="3"/>
+  <path d="M15 23h16" stroke="#d88c5a" stroke-width="3"/>
+  <path d="M19 15c-3-3 3-5 0-8M26 15c-3-3 3-5 0-8M33 16c-3-3 2-5 0-8" fill="none" stroke="#f5f0df" stroke-width="2" stroke-linecap="round" opacity="0.78"/>
+  <rect x="15" y="31" width="17" height="3" fill="#d8a23a" opacity="0.55"/>
+</svg>

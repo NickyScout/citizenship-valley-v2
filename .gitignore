@@ -1,0 +1,12 @@
+.DS_Store
+Thumbs.db
+*.log
+.swa
+.tools
+dist
+node_modules
+.vite
+publish
+qa-screenshots
+*-result.json
+.git-broken-backup

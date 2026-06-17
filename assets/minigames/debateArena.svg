@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Debate arena podiums">
+  <defs>
+    <linearGradient id="daBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#241b30"/>
+      <stop offset="1" stop-color="#15101d"/>
+    </linearGradient>
+  </defs>
+  <rect width="360" height="120" fill="url(#daBg)"/>
+  <rect y="98" width="360" height="22" fill="#1c1528"/>
+  <!-- left podium -->
+  <g>
+    <rect x="44" y="58" width="58" height="44" rx="3" fill="#3d334f" stroke="#5da9e9" stroke-width="2"/>
+    <rect x="58" y="40" width="30" height="20" rx="3" fill="#466d9f"/>
+    <circle cx="73" cy="34" r="9" fill="#e0a458"/>
+  </g>
+  <!-- right podium -->
+  <g>
+    <rect x="258" y="58" width="58" height="44" rx="3" fill="#3d334f" stroke="#e36b5d" stroke-width="2"/>
+    <rect x="272" y="40" width="30" height="20" rx="3" fill="#8f4f44"/>
+    <circle cx="287" cy="34" r="9" fill="#d8a079"/>
+  </g>
+  <!-- debate cards in the middle -->
+  <g font-family="Georgia, serif" font-size="7.5" font-weight="700" text-anchor="middle">
+    <g transform="rotate(-8 140 64)"><rect x="120" y="48" width="40" height="32" rx="3" fill="#f5f0df" stroke="#b98231" stroke-width="2"/><text x="140" y="67" fill="#26313a">ARG</text></g>
+    <g transform="rotate(-2 180 58)"><rect x="160" y="42" width="40" height="32" rx="3" fill="#cfe6fb" stroke="#5da9e9" stroke-width="2"/><text x="180" y="61" fill="#1c4a6b">EVID</text></g>
+    <g transform="rotate(7 220 64)"><rect x="200" y="48" width="40" height="32" rx="3" fill="#d7f0d9" stroke="#6fbf73" stroke-width="2"/><text x="220" y="67" fill="#1f5130">REBUT</text></g>
+  </g>
+  <!-- rosette -->
+  <g transform="translate(180 96)">
+    <circle r="11" fill="#f2c14e" stroke="#b98231" stroke-width="2"/>
+    <path d="M0 0 l-6 18 6 -4 6 4 z" fill="#e36b5d"/>
+    <circle r="4" fill="#fff3d0"/>
+  </g>
+</svg>

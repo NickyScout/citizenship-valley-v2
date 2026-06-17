@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="title desc">
+  <title id="title">Debate Blade</title>
+  <desc id="desc">A ceremonial argument blade with gold guard.</desc>
+  <rect width="48" height="48" rx="6" fill="#182124"/>
+  <path d="M30 5l7 7-18 21-6-6z" fill="#d7dde0" stroke="#f5f0df" stroke-width="2"/>
+  <path d="M14 27l7 7-5 5-7-7z" fill="#5b392f" stroke="#241b12" stroke-width="2"/>
+  <path d="M11 25l12 12" stroke="#f2c14e" stroke-width="5" stroke-linecap="round"/>
+  <path d="M28 9l5 5" stroke="#83d8ff" stroke-width="2" opacity="0.9"/>
+</svg>

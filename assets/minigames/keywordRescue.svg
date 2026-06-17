@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Civic keyword board">
+  <defs>
+    <linearGradient id="krBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c2b22"/>
+      <stop offset="1" stop-color="#101813"/>
+    </linearGradient>
+  </defs>
+  <rect width="360" height="120" fill="url(#krBg)"/>
+  <!-- noticeboard frame -->
+  <rect x="14" y="14" width="332" height="92" rx="4" fill="#243b2f" stroke="#caa64a" stroke-width="3"/>
+  <rect x="14" y="14" width="332" height="14" fill="#2f5d3a"/>
+  <text x="180" y="25" font-family="Georgia, serif" font-size="9" font-weight="700" text-anchor="middle" fill="#ffe9a8">CIVIC KEYWORD BOARD</text>
+  <!-- letter tiles spelling some + blanks -->
+  <g font-family="Georgia, serif" font-size="15" font-weight="700" text-anchor="middle">
+    <g><rect x="30" y="44" width="26" height="30" rx="3" fill="#f5f0df" stroke="#b98231" stroke-width="2"/><text x="43" y="65" fill="#26313a">D</text></g>
+    <g><rect x="60" y="44" width="26" height="30" rx="3" fill="#f5f0df" stroke="#b98231" stroke-width="2"/><text x="73" y="65" fill="#26313a">E</text></g>
+    <g><rect x="90" y="44" width="26" height="30" rx="3" fill="#5da9e9" stroke="#3f7cae" stroke-width="2"/><text x="103" y="65" fill="#fff">M</text></g>
+    <g><rect x="120" y="44" width="26" height="30" rx="3" fill="#f5f0df" stroke="#b98231" stroke-width="2"/><text x="133" y="65" fill="#26313a">O</text></g>
+    <g><rect x="150" y="44" width="26" height="30" rx="3" fill="#2b3a44" stroke="#566872" stroke-width="2"/><text x="163" y="65" fill="#6f7d86">?</text></g>
+    <g><rect x="180" y="44" width="26" height="30" rx="3" fill="#2b3a44" stroke="#566872" stroke-width="2"/><text x="193" y="65" fill="#6f7d86">?</text></g>
+    <g><rect x="210" y="44" width="26" height="30" rx="3" fill="#f5f0df" stroke="#b98231" stroke-width="2"/><text x="223" y="65" fill="#26313a">A</text></g>
+    <g><rect x="240" y="44" width="26" height="30" rx="3" fill="#2b3a44" stroke="#566872" stroke-width="2"/><text x="253" y="65" fill="#6f7d86">?</text></g>
+    <g><rect x="270" y="44" width="26" height="30" rx="3" fill="#2b3a44" stroke="#566872" stroke-width="2"/><text x="283" y="65" fill="#6f7d86">?</text></g>
+  </g>
+  <!-- spark meter -->
+  <g>
+    <text x="30" y="92" font-family="Georgia, serif" font-size="8" font-weight="700" fill="#d7f0d9">SPARKS</text>
+    <rect x="74" y="84" width="120" height="9" rx="3" fill="#101813" stroke="#3f8a47" stroke-width="1.5"/>
+    <rect x="76" y="86" width="78" height="5" rx="2" fill="#6fbf73"/>
+  </g>
+  <!-- spark icon -->
+  <path d="M300 80 l-9 16 7 0 -4 12 13 -18 -7 0 5 -10 z" fill="#f2c14e" stroke="#b98231" stroke-width="1"/>
+</svg>

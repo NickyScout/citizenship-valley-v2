@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="title desc">
+  <title id="title">Citizen Scroll</title>
+  <desc id="desc">A parchment scroll with gold rollers and civic lines.</desc>
+  <rect width="48" height="48" rx="6" fill="#182124"/>
+  <rect x="12" y="12" width="24" height="24" rx="2" fill="#f5f0df" stroke="#8f6a2a" stroke-width="3"/>
+  <rect x="6" y="10" width="9" height="28" rx="5" fill="#d3a74d" stroke="#8f6a2a" stroke-width="2"/>
+  <rect x="33" y="10" width="9" height="28" rx="5" fill="#d3a74d" stroke="#8f6a2a" stroke-width="2"/>
+  <path d="M17 20h14M17 26h13M17 31h10" stroke="#8f6a2a" stroke-width="2" stroke-linecap="round"/>
+  <path d="M24 14l2 4 4 .5-3 3 .8 4-3.8-2-3.8 2 .8-4-3-3 4-.5z" fill="#f2c14e" opacity="0.75"/>
+</svg>

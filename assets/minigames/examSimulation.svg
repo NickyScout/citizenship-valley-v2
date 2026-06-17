@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Exam simulation desk">
+  <defs>
+    <linearGradient id="exBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#202733"/>
+      <stop offset="1" stop-color="#12171f"/>
+    </linearGradient>
+  </defs>
+  <rect width="360" height="120" fill="url(#exBg)"/>
+  <!-- desk -->
+  <rect y="88" width="360" height="32" fill="#6f4633"/>
+  <rect y="88" width="360" height="5" fill="#8f5b3f"/>
+  <!-- exam paper -->
+  <g transform="rotate(-3 130 60)">
+    <rect x="74" y="22" width="112" height="80" rx="3" fill="#f5f0df" stroke="#cdbf9f" stroke-width="2"/>
+    <rect x="84" y="30" width="92" height="12" fill="#26313a"/>
+    <text x="130" y="39" font-family="Georgia, serif" font-size="8" font-weight="700" text-anchor="middle" fill="#f5f0df">GCSE CITIZENSHIP</text>
+    <rect x="84" y="50" width="14" height="8" fill="#5da9e9"/><rect x="102" y="51" width="74" height="5" fill="#9fb0bb"/>
+    <rect x="84" y="62" width="14" height="8" fill="#6fbf73"/><rect x="102" y="63" width="74" height="5" fill="#9fb0bb"/>
+    <rect x="84" y="74" width="14" height="8" fill="#f2c14e"/><rect x="102" y="75" width="74" height="5" fill="#9fb0bb"/>
+    <rect x="84" y="86" width="14" height="8" fill="#e36b5d"/><rect x="102" y="87" width="58" height="5" fill="#9fb0bb"/>
+  </g>
+  <!-- source card -->
+  <g transform="rotate(8 250 62)">
+    <rect x="214" y="34" width="78" height="58" rx="3" fill="#cfe6fb" stroke="#5da9e9" stroke-width="2"/>
+    <text x="253" y="48" font-family="Georgia, serif" font-size="8" font-weight="700" text-anchor="middle" fill="#1c4a6b">SOURCE A</text>
+    <rect x="222" y="54" width="62" height="4" fill="#7fa8c4"/>
+    <rect x="222" y="62" width="62" height="4" fill="#7fa8c4"/>
+    <rect x="222" y="70" width="48" height="4" fill="#7fa8c4"/>
+  </g>
+  <!-- clock -->
+  <g>
+    <circle cx="322" cy="28" r="17" fill="#f5f0df" stroke="#b98231" stroke-width="3"/>
+    <line x1="322" y1="28" x2="322" y2="17" stroke="#26313a" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="322" y1="28" x2="331" y2="32" stroke="#e36b5d" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <!-- pencil -->
+  <g transform="rotate(40 150 100)">
+    <rect x="120" y="96" width="56" height="8" fill="#f2c14e"/>
+    <path d="M176 96 l10 4 l-10 4 z" fill="#e6cfa0"/>
+    <path d="M183 99 l3 1 l-3 1 z" fill="#3a2f28"/>
+    <rect x="114" y="96" width="6" height="8" fill="#e36b5d"/>
+  </g>
+</svg>
