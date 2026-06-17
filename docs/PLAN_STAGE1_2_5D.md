@@ -107,6 +107,7 @@
 - Спрайтовое **дерево** (`T`, билборд+тень) — первый вертикальный объект; тайл-вариации/декали по `hashNoise`; региональные подпалитры; вода/берег поверх текущих кромок.
 - Файлы: `game.js` (`drawTile`/`drawTileEdges`/новый `drawTreeBillboard`/`drawTileVariation`), `assets/tiles/`, `scripts/validate-world.js`. **От тебя:** тест-ассеты (трава+дерево) → после валидации остальные тайлы/вариации.
 - QA: карты/коллизии не менялись → reachability та же; visual smoke.
+- **Готово (2.0.4–2.0.7):** 6 земляных тайлов (grass/road/plaza/water/dock/wall) + `tree-oak.png` (свободностоящие деревья) + `bush.png` (`drawBushAsset`) + `tree-small.png` (`drawTreeTileAsset` для `T`-тайлов), все с magenta-cut пайплайном (`scripts/process-tile-art.ps1`, `scripts/process-greenery.ps1`) и процедурным fallback. Починена «мёртвая» проверка существования ассетов в `validate-world.js` (`TILE_ASSETS`/`TREE_ASSET`/`HERO_ASSETS`/`BUSH_ASSET`/`TREE_SMALL_ASSET` теперь реально валидируются).
 
 ### 1E — Риг экипировки героя
 - `EQUIP_SLOTS` (`body`/`outfit`/`head`/`hat`/`hands/held`/`back`/`accessory`) + слоевая композиция; тинт по `profile`/`outfit`; тень; **синхрон портрета** с миром; fallback `drawHero*`.
@@ -120,6 +121,7 @@
 - Подключить NPC к новой глубине (тень+z), без смены их арта (полный спрайт-арт — Этап 2).
 - Файлы: `game.js` (`drawPerson`/`drawCharacterLayer`). **От тебя:** ничего (арт NPC — Этап 2).
 - QA: `qa-regional-playthrough`/`qa-regional-quests-playthrough`; `E`-надёжность.
+- **Готово (в составе 1A):** NPC уже используют направленную `drawCastShadow` и единый z-сорт персонажей (`drawCharacterLayer`). Отдельной работы не требуется — остаётся только арт NPC (универсальный житель, тинт по ролям).
 
 ### 1G — Интеграция, QA, перф
 - Офскрин-кэш статичных слоёв (фон/тени статичных зданий), лимиты, Reduced Motion аудит, финальный visual smoke, обновление `VISUAL_STYLE_GUIDE.md` (палитра/свет/масштаб/конвенции).

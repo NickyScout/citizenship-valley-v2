@@ -1405,6 +1405,9 @@ const TILE_ASSETS = {
 
 // Stage 1D: pixel-art oak sprite for free-standing scenery trees (falls back to drawBigTree).
 const TREE_ASSET = "assets/tiles/tree-oak.png";
+// Stage 1D greenery: pixel-art shrub + compact sapling for map "T" tiles (procedural fallback).
+const BUSH_ASSET = "assets/tiles/bush.png";
+const TREE_SMALL_ASSET = "assets/tiles/tree-small.png";
 
 const HERO_ASSETS = {
   base: "assets/characters/hero-base.png"
@@ -6528,7 +6531,21 @@ function drawTile(ch, x, y, row = 0, col = 0, map = currentMap()) {
   }
 }
 
+// Stage 1D: asset-backed compact sapling for map "T" tiles. Drawn in the tile pass (not the
+// character z-sort), so it is kept short — base on the tile floor, canopy only slightly above.
+function drawTreeTileAsset(x, y) {
+  const image = getAssetImage(TREE_SMALL_ASSET);
+  if (!image || !image.complete || !image.naturalWidth) return false;
+  const cx = x + 16;
+  drawCastShadow(cx, y + 30, 9, 36, 0.85);
+  const h = 42;
+  const w = Math.round(h * image.naturalWidth / image.naturalHeight);
+  ctx.drawImage(image, Math.round(cx - w / 2), Math.round(y + 31 - h), w, h);
+  return true;
+}
+
 function drawTreeTile(x, y) {
+  if (drawTreeTileAsset(x, y)) return;
   const cx = x + 16;
   // Stage 1A: shared directional cast shadow instead of the old flat double ellipse.
   drawCastShadow(cx, y + 30, 12, 46, 0.9);
@@ -6661,8 +6678,22 @@ function drawScenery(item) {
     if (drawTreeAsset(item.x, item.y)) return;
     drawBigTree(item.x, item.y);
   } else {
+    if (drawBushAsset(item.x, item.y)) return;
     drawBush(item.x, item.y);
   }
+}
+
+// Stage 1D: asset-backed shrub anchored where drawBush sat (cx=px+32, ground ~py+56), with the
+// engine's directional cast shadow underneath. Falls back to the procedural bush if not ready.
+function drawBushAsset(px, py) {
+  const image = getAssetImage(BUSH_ASSET);
+  if (!image || !image.complete || !image.naturalWidth) return false;
+  const cx = px + 32;
+  drawCastShadow(cx, py + 55, 22, OBJECT_HEIGHTS.bush, 0.95);
+  const w = 56;
+  const h = Math.round(w * image.naturalHeight / image.naturalWidth);
+  ctx.drawImage(image, Math.round(cx - w / 2), Math.round(py + 56 - h), w, h);
+  return true;
 }
 
 // Stage 1D: asset-backed oak. Anchored so the trunk base sits where drawBigTree's did
