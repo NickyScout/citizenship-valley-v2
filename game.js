@@ -1395,13 +1395,16 @@ const PROP_ASSETS = {
 };
 
 const TILE_ASSETS = {
-  grass: "assets/tiles/tile-grass.svg",
+  grass: "assets/tiles/tile-grass.png",
   road: "assets/tiles/tile-road.svg",
   plaza: "assets/tiles/tile-plaza.svg",
   water: "assets/tiles/tile-water.svg",
   dock: "assets/tiles/tile-dock.svg",
   wall: "assets/tiles/tile-wall.svg"
 };
+
+// Stage 1D: pixel-art oak sprite for free-standing scenery trees (falls back to drawBigTree).
+const TREE_ASSET = "assets/tiles/tree-oak.png";
 
 const HERO_ASSETS = {
   base: "assets/characters/hero-base-spritesheet.svg"
@@ -6654,8 +6657,26 @@ function drawBush(px, py) {
 }
 
 function drawScenery(item) {
-  if (item.type === "tree") drawBigTree(item.x, item.y);
-  else drawBush(item.x, item.y);
+  if (item.type === "tree") {
+    if (drawTreeAsset(item.x, item.y)) return;
+    drawBigTree(item.x, item.y);
+  } else {
+    drawBush(item.x, item.y);
+  }
+}
+
+// Stage 1D: asset-backed oak. Anchored so the trunk base sits where drawBigTree's did
+// (cx = px+32, ground at py+92), with the engine's directional cast shadow underneath.
+// Returns false if the PNG isn't ready yet so drawScenery falls back to the procedural tree.
+function drawTreeAsset(px, py) {
+  const image = getAssetImage(TREE_ASSET);
+  if (!image || !image.complete || !image.naturalWidth) return false;
+  const cx = px + 32;
+  drawCastShadow(cx, py + 89, 24, OBJECT_HEIGHTS.tree, 0.95);
+  const w = 64;
+  const h = Math.round(w * image.naturalHeight / image.naturalWidth);
+  ctx.drawImage(image, Math.round(cx - w / 2), Math.round(py + 92 - h), w, h);
+  return true;
 }
 
 function paintUnionJack(x, y, w, h) {
