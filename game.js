@@ -6264,6 +6264,58 @@ function currentAtmosphere() {
   return REGION_ATMOSPHERE[state.currentLocation] || REGION_ATMOSPHERE.village;
 }
 
+// === SECTION: 2.5D LIGHTING (Stage 1A) ===
+// A single global light so every cast shadow in the world falls the same way, giving the
+// flat top-down scene a consistent sense of depth. LIGHT_DIR is the direction light comes
+// FROM (top-left); shadows are offset opposite (down-right), scaled by an object's height.
+const LIGHT_DIR = { x: -0.6, y: -0.8 };
+const SHADOW_SHEAR = 0.16; // logical px a shadow slides per px of object height
+// Rough object heights (logical px) used to size/offset cast shadows. This is the depth
+// model later sub-stages (buildings/hero/props) also read; not gameplay collision.
+const OBJECT_HEIGHTS = { person: 34, tree: 88, bush: 40, prop: 26, building: 96 };
+
+// Cached soft radial shadow sprite — drawn once, reused for every shadow (cheap + soft).
+let shadowSprite = null;
+function getShadowSprite() {
+  if (shadowSprite) return shadowSprite;
+  const s = document.createElement("canvas");
+  s.width = s.height = 64;
+  const sctx = s.getContext("2d");
+  const g = sctx.createRadialGradient(32, 32, 2, 32, 32, 31);
+  g.addColorStop(0, "rgba(12,16,12,0.55)");
+  g.addColorStop(0.55, "rgba(12,16,12,0.30)");
+  g.addColorStop(1, "rgba(12,16,12,0)");
+  sctx.fillStyle = g;
+  sctx.fillRect(0, 0, 64, 64);
+  shadowSprite = s;
+  return shadowSprite;
+}
+
+// Draw a soft elliptical cast shadow on the ground at a foot point (world space). `radius`
+// is the half-width of the object's base; `height` slides the shadow opposite the light and
+// is purely visual; `alpha` scales darkness. Squashed flat to read as a ground-plane shadow.
+// Reduced-motion safe (fully static). Used by characters, trees and (later) buildings/props.
+function drawCastShadow(footX, footY, radius, height = 0, alpha = 1) {
+  const sprite = getShadowSprite();
+  const w = radius * 2.2;
+  const h = Math.max(4, radius * 0.74);
+  const cx = footX - LIGHT_DIR.x * height * SHADOW_SHEAR;
+  const cy = footY - LIGHT_DIR.y * height * SHADOW_SHEAR * 0.5;
+  const prev = ctx.globalAlpha;
+  ctx.globalAlpha = prev * alpha;
+  ctx.drawImage(sprite, cx - w / 2, cy - h / 2, w, h);
+  ctx.globalAlpha = prev;
+}
+
+// Day/night tint hook (DORMANT in Stage 1). Returns a screen-space overlay colour; Stage 3
+// will drive `state.timeOfDay` (0..1) to tint dawn/dusk/night. Neutral now → no visible
+// change, but the call site in drawAtmosphereOverlay is wired so Stage 3 is a data change.
+function dayNightFactor() {
+  const t = state.timeOfDay;
+  if (t === undefined || t === null) return { r: 0, g: 0, b: 0, alpha: 0 };
+  return { r: 0, g: 0, b: 0, alpha: 0 };
+}
+
 function drawPixelPattern(x, y, w, h, colors, density, salt) {
   for (let i = 0; i < density; i += 1) {
     const px = x + Math.floor(hashNoise(i + x, y, salt) * w);
@@ -6475,17 +6527,8 @@ function drawTile(ch, x, y, row = 0, col = 0, map = currentMap()) {
 
 function drawTreeTile(x, y) {
   const cx = x + 16;
-  ctx.save();
-  ctx.globalAlpha = .18;
-  ctx.fillStyle = "#16240f";
-  ctx.beginPath();
-  ctx.ellipse(cx + 5, y + 31, 13, 4.5, -0.22, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = .28;
-  ctx.beginPath();
-  ctx.ellipse(cx + 1, y + 30, 10, 3.4, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  // Stage 1A: shared directional cast shadow instead of the old flat double ellipse.
+  drawCastShadow(cx, y + 30, 12, 46, 0.9);
   // trunk with bark shading
   rect(x + 13, y + 17, 6, 14, "#6a4a32");
   rect(x + 13, y + 17, 2, 14, "#825d40");
@@ -6537,18 +6580,8 @@ function leafBlob(bx, by, r, color) {
 // sceneryFootprint) so the player walks behind the canopy via the character z-sort.
 function drawBigTree(px, py) {
   const cx = px + 32;
-  // ground shadow
-  ctx.save();
-  ctx.globalAlpha = .2;
-  ctx.fillStyle = "#16240f";
-  ctx.beginPath();
-  ctx.ellipse(cx + 6, py + 90, 26, 8, -0.18, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = .26;
-  ctx.beginPath();
-  ctx.ellipse(cx, py + 89, 19, 6, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  // ground shadow — Stage 1A shared directional cast shadow.
+  drawCastShadow(cx, py + 89, 24, OBJECT_HEIGHTS.tree, 0.95);
   // trunk with bark shading + root flare
   rect(cx - 7, py + 58, 14, 34, "#6a4a32");
   rect(cx - 7, py + 58, 4, 34, "#825d40");
@@ -6594,13 +6627,8 @@ function drawBigTree(px, py) {
 // Round shrub spanning roughly 2x2 tiles (64x64 logical px), anchored top-left.
 function drawBush(px, py) {
   const cx = px + 32;
-  ctx.save();
-  ctx.globalAlpha = .22;
-  ctx.fillStyle = "#16240f";
-  ctx.beginPath();
-  ctx.ellipse(cx + 3, py + 56, 24, 6.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  // Stage 1A shared directional cast shadow.
+  drawCastShadow(cx, py + 55, 22, OBJECT_HEIGHTS.bush, 0.95);
   // base/shadow layer
   leafBlob(cx, py + 42, 22, "#235829");
   leafBlob(cx - 16, py + 44, 14, "#27602f");
@@ -6963,14 +6991,8 @@ function drawPerson(person) {
   }
   const build = style.build;
 
-  // §S6 soft contact shadow, planted at the feet (scales with build). Single ellipse, no
-  // save/restore (rect() sets its own fillStyle), to keep the NPC cost near baseline.
-  ctx.globalAlpha = .24;
-  ctx.fillStyle = "#10160f";
-  ctx.beginPath();
-  ctx.ellipse(x + 12, y + 47, 15 + build, 4.8, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = 1;
+  // §S6 / Stage 1A: soft contact shadow at the feet via the shared directional light.
+  drawCastShadow(x + 12, y + 47, 13 + build, OBJECT_HEIGHTS.person);
 
   // legs/shoes — planted (do NOT breathe)
   rect(x + 5, y + 38, 7, 9, "#2b2d2f");
@@ -7578,6 +7600,8 @@ function drawPlayer() {
   const p = state.player;
   const frame = Math.floor(p.step / 10) % 4;
   const bob = frame === 1 || frame === 3 ? 1 : 0;
+  // Stage 1A: shared directional contact shadow at the hero's feet (sprite + fallback paths).
+  drawCastShadow(p.x + 16, p.y + 46, 13, OBJECT_HEIGHTS.person);
   if (drawHeroSpriteAsset(p, frame, bob)) return;
   const outfit = ITEMS[state.equipped.outfit] || ITEMS.schoolJumper;
   const side = p.dir === "left" ? -1 : 1;
@@ -7880,7 +7904,7 @@ function drawHeroSide(p, outfit, bob, frame, side) {
 function drawHeroFront(p, outfit, bob, frame) {
   const legA = frame === 1 ? 3 : 0;
   const legB = frame === 3 ? 3 : 0;
-  rect(p.x - 5, p.y + 39, 38, 8, "rgba(0,0,0,.34)");
+  // (Stage 1A: contact shadow now drawn once in drawPlayer via drawCastShadow.)
   rect(p.x + 4, p.y + 17 + bob, 22, 22, outfit.color);
   rect(p.x + 7, p.y + 20 + bob, 16, 15, "#2f6f3b");
   rect(p.x + 3, p.y + 18 + bob, 5, 17, "#5a3a2e");
@@ -7906,7 +7930,7 @@ function drawHeroFront(p, outfit, bob, frame) {
 function drawHeroBack(p, outfit, bob, frame) {
   const legA = frame === 1 ? 3 : 0;
   const legB = frame === 3 ? 3 : 0;
-  rect(p.x - 5, p.y + 39, 38, 8, "rgba(0,0,0,.34)");
+  // (Stage 1A: contact shadow now drawn once in drawPlayer via drawCastShadow.)
   rect(p.x + 4, p.y + 16 + bob, 22, 24, "#23351f");
   rect(p.x + 7, p.y + 18 + bob, 16, 19, outfit.color);
   rect(p.x + 5, p.y + 31 + bob, 21, 4, "#6d4939");
@@ -9053,6 +9077,12 @@ function drawAtmosphereOverlay() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = getAtmosphereVignette(`vig_${atmo.vignette}`, atmo.vignette);
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Stage 1A day/night hook — dormant (alpha 0) until Stage 3 drives state.timeOfDay.
+  const dn = dayNightFactor();
+  if (dn.alpha > 0) {
+    ctx.fillStyle = `rgba(${dn.r},${dn.g},${dn.b},${dn.alpha})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
   ctx.restore();
 }
 

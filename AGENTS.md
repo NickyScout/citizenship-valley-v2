@@ -102,4 +102,4 @@ Do not print or commit the deployment token.
 - No secrets or local private paths are committed.
 - Player can move from the initial spawn for every affected location.
 - NPCs remain reachable after map/layout changes.
-- Public site is redeployed when the user expects the change to be live.
+- Public site is redeployed when the user expects the change to be live. Current V2 working preference: after every completed change, commit to git AND deploy to the live Static Web App (bump the semantic `2.0.x` version first).
