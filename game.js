@@ -6923,6 +6923,12 @@ function drawBuilding(x, y, w, h, wall, roof, label, kind, doorSide = "bottom") 
   drawBuildingRoof(buildingKind, x, y, w, h, roof, wall);
   rect(x, y, w, h, wall);
   drawPixelPattern(x + 3, y + 4, w - 6, h - 26, ["rgba(255,255,255,.16)", "rgba(80,60,45,.14)"], 14, x + y);
+  // Stage 1C: 2.5D volume cues, lit from the top-left (matches LIGHT_DIR). The left wall
+  // face catches light, the right face falls into shade, and the roofline casts a soft
+  // overhang shadow onto the top of the facade — so the flat front reads as a 3D block.
+  rect(x, y, 5, h - 18, shadeHex(wall, 18));
+  rect(x + w - 7, y, 7, h - 18, shadeHex(wall, -26));
+  rect(x, y, w, 5, "rgba(18,12,8,.24)");
   for (let by = y + 8; by < y + h - 25; by += 12) {
     for (let bx = x + 6 + ((by / 12) % 2 ? 8 : 0); bx < x + w - 8; bx += 18) {
       rect(bx, by, 8, 1, "rgba(82,64,52,.18)");
