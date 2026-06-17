@@ -16,7 +16,7 @@ The current priority is educational clarity and safe iteration. Gameplay systems
 - Auth: none
 - Save system: browser `localStorage`
 - Deployment: Azure Static Web Apps
-- Repository: `NickyScout/citizenship-valley`
+- Repository: `NickyScout/citizenship-valley-v2`
 
 ## Rules
 
@@ -85,10 +85,10 @@ if (Test-Path dist) { Remove-Item -LiteralPath dist -Recurse -Force }
 New-Item -ItemType Directory -Force -Path dist | Out-Null
 Copy-Item -Path index.html,styles.css,game.js,curriculum.js,staticwebapp.config.json -Destination dist -Force
 if (Test-Path assets) { Copy-Item -Path assets -Destination dist -Recurse -Force }
-if (Test-Path dist\assets\portraits) { Remove-Item -LiteralPath dist\assets\portraits -Recurse -Force }
+if (Test-Path dist\assets\characters\portraits-src) { Remove-Item -LiteralPath dist\assets\characters\portraits-src -Recurse -Force }
 
 $env:PATH = "$PWD\.tools\node-v22.11.0-win-x64;$env:PATH"
-$token = az staticwebapp secrets list --name citizenship-gcse-game-nmilyaev --resource-group rg-citizenship-game --query properties.apiKey -o tsv
+$token = az staticwebapp secrets list --name citizenship-valley-v2 --resource-group rg-citizenship-game --query properties.apiKey -o tsv
 .\node_modules\.bin\swa.cmd deploy .\dist --deployment-token $token --env production
 ```
 

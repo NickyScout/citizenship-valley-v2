@@ -2,6 +2,10 @@
 
 An indie-style GCSE Citizenship revision RPG inspired by cosy top-down games.
 
+Version 2 is a new-graphics overhaul of the V1 prototype; all V1 gameplay systems carry over as the foundation.
+
+Live site: <https://black-grass-036ec2d03.7.azurestaticapps.net>
+
 ## Play
 
 Open `http://127.0.0.1:5173/index.html` while the local preview server is running.

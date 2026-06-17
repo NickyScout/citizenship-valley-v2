@@ -1,25 +1,26 @@
 # AI Handoff
 
-## 0. V1 FINAL — handoff to V2 (2026-06-17)
+## 0. V2 START — current state (2026-06-17)
 
-> This section is the authoritative current state. **Everything below section 0 is historical (pre-2026-06-05) and partly outdated — read it for background only, and trust this section where they conflict.** V2's focus is a **new-graphics overhaul**.
+> This section is the authoritative current state. **Everything below section 0 is historical (pre-2026-06-05) and partly outdated — read it for background only, and trust this section where they conflict.** V2's focus is a **new-graphics overhaul**; all V1 gameplay systems carry over as the foundation.
 
-### V1 final state
-- Live site: `https://lemon-meadow-063d62b03.7.azurestaticapps.net`, version **`2026.06.12.34`**, all QA green.
-- Git: root **IS** a normal Git repo now (the old "use publish/ for git" note below is OBSOLETE). Remote `NickyScout/citizenship-valley`, branch `main`, tag **`v1.0`** marks this final state. Commit + `git push origin main` from the **root**.
+### V2 baseline
+- Forked from V1 final (`2026.06.12.34`, V1 tag `v1.0` on the old repo). **Version reset to semantic `2.0.0`** — bump the patch (`2.0.1`, `2.0.2`, …) on each deploy.
+- Live site (NEW V2 SWA): `https://black-grass-036ec2d03.7.azurestaticapps.net`, version **`2.0.0`**.
+- Git: root **IS** a normal Git repo. Remote `NickyScout/citizenship-valley-v2`, branch `main`. Commit + `git push origin main` from the **root**. The legacy `publish/` mirror and its sync step are GONE — deploy builds `dist/` from root directly.
 - Node: bundled at `.tools/node-v22.11.0-win-x64` (gitignored). Always prefix:
   `$env:PATH = "$PWD\.tools\node-v22.11.0-win-x64;$env:PATH"` before node commands.
 - **No `package.json` at root** — `node_modules/` (holds the `swa` CLI) is NOT reproducible via `npm install`; it must be carried over, not reinstalled.
 
-### Deploy recipe (verified, current)
-1. Bump the cache-bust version in `index.html` — **5 markers**: `styles.css?v=`, `<body data-app-version=`, `#appVersion` text `v…`, `curriculum.js?v=`, `game.js?v=`. Returning browsers won't refetch an identical `?v=`.
+### Deploy recipe (verified)
+1. Bump the cache-bust version in `index.html` — **5 markers**: `styles.css?v=`, `<body data-app-version=`, `#appVersion` text `v…`, `curriculum.js?v=`, `game.js?v=`. Use the next semantic patch (`2.0.1`, …). Returning browsers won't refetch an identical `?v=`.
 2. Build `dist/`: copy `index.html,styles.css,game.js,curriculum.js,staticwebapp.config.json` + `assets/` into `dist`, then delete `dist/assets/characters/portraits-src` (source atlases, excluded from deploy).
-3. Token (never print/commit): `az staticwebapp secrets list --name citizenship-gcse-game-nmilyaev --resource-group rg-citizenship-game --query properties.apiKey -o tsv`.
+3. Token (never print/commit): `az staticwebapp secrets list --name citizenship-valley-v2 --resource-group rg-citizenship-game --query properties.apiKey -o tsv`.
 4. `.\node_modules\.bin\swa.cmd deploy .\dist --deployment-token $token --env production`.
 5. **Verify LIVE** flipped: fetch `index.html?cb=<ts>` for the new version + `game.js` for the changed line. Split bump/build/deploy/verify into separate commands (a giant `;`-chain can deploy a STALE dist).
-- After deploy, `git push origin main` (separate from Azure). Verify sync `git rev-list --left-right --count origin/main...HEAD` == `0 0`. `publish/` and `*-result.json` are gitignored — never staged.
+- After deploy, `git push origin main` (separate from Azure). Verify sync `git rev-list --left-right --count origin/main...HEAD` == `0 0`. `dist/` and `*-result.json` are gitignored — never staged.
 
-### QA (all pass at v1.0)
+### QA (all pass at the V1 fork point)
 `node scripts\validate-world.js` · `node scripts\validate-ui.js` · `node qa-visual-smoke.mjs` (+ `node --check game.js`, regional/route audits in `docs/QA_RUNBOOK.md`).
 
 ### Graphics architecture (the V2 replacement target)
@@ -41,11 +42,10 @@ All art is hand-coded pixel-art via `rect(x,y,w,h,color)` + a few SVG/PNG assets
 ### Browser-montage QA recipe (how to inspect sprites at zoom)
 Serve the game; in `page.evaluate` set `window.requestAnimationFrame=()=>0` **and** `window.draw=function(){}` to KILL the render loop (it repaints over your montage — the title screen is a DOM overlay so the canvas always runs), `settings.reducedMotion=true`, `state.completed={has:()=>true}` (hide quest "!"). Gather NPCs from `WORLD`+`locationBlueprints`, then per sprite `ctx.setTransform(scale,0,0,scale,ox,oy); drawPerson({id,name,x:0,y:0,color})`. Capture with the `screenshot_page` tool on a viewport-sized canvas (≤~1000×950, paginate); **toggle the viewport size to force a fresh capture** (it caches stale frames); first remove `#titleScreen` + `[aria-label="Touch controls"]`. Element/path `page.screenshot` HANGS on font-wait and clips a big canvas; downloads/`require` are unavailable in the playwright tool.
 
-### Transfer notes for V2
-- `publish/` is a **legacy gitignored mirror** of root files — V2 should DROP it and its sync step; the deploy builds `dist/` from root directly.
-- Stale facts in the legacy sections below to ignore in V2: "root is not a Git repo / use publish/", "procedural SVG portraits" (real PNGs now exist), the G2/G3 TODO list, `SAVE_VERSION = 6` (see `migrateSave()` for the real current target).
-- For V2 deploy: create a NEW SWA (analogous to the existing one, its own deployment token) and a NEW GitHub repo; update the SWA name / resource group / live URL / repo slug in `AGENTS.md`, `.github/copilot-instructions.md`, `README.md`, and this file.
-- Repo memory (`/memories/repo/`) is workspace-scoped and will be EMPTY in the V2 workspace — this section is the bridge; re-seed memory from it after opening V2.
+### Carried-over notes
+- The V2 SWA (`citizenship-valley-v2`, RG `rg-citizenship-game`, West Europe, Free) and the GitHub repo (`NickyScout/citizenship-valley-v2`) are LIVE; identifiers are repointed in `AGENTS.md`, `.github/copilot-instructions.md`, `README.md`, sections 7–8 below, and repo memory (`/memories/repo/`).
+- Stale facts in the legacy sections below to ignore: "root is not a Git repo / use publish/", "procedural SVG portraits" (real PNGs now exist), the G2/G3 TODO list, `SAVE_VERSION = 6` (V1 reached `SAVE_VERSION = 7`; see `migrateSave()` for the real current target).
+- The legacy `publish/` mirror was dropped before V2 started; ignore any "sync publish/" workflow mentions in the historical sections below.
 
 ---
 
@@ -96,7 +96,7 @@ This is a static HTML/CSS/JavaScript canvas game. There is no bundler, framework
 - `game.js` contains the game loop, canvas rendering, world data, NPCs, quests, movement, inventory, mini-games, story state, save/load, and UI event handling.
 - `curriculum.js` defines the external curriculum guide and enriches quest explanations through `window.GCSE_CURRICULUM_INDEX`.
 - Browser progress is saved in `localStorage` under `citizenshipValleySaveV1`; the current save version is `SAVE_VERSION = 6`. Browser display settings are saved separately under `citizenshipValleySettingsV1`.
-- Azure Static Web Apps hosts the public static site. Current workflow expectation: after each completed implementation stage, validate locally, sync `publish/`, commit/push from `publish/`, deploy to production SWA, and verify live markers/assets. Do not print deployment tokens.
+- Azure Static Web Apps hosts the public static site. Current workflow expectation: after each completed implementation stage, validate locally, commit/push from the repository root, deploy to production SWA, and verify live markers/assets. Do not print deployment tokens. (The legacy `publish/` sync step was removed in V2.)
 
 Rendering uses a `1280x768` canvas. The logical tile size is `32`, rendered at `1.5x` so visible tiles are `48px`. The camera follows the player. The draw pipeline is split into layers: ground, paths, buildings, props, characters, and world UI.
 
@@ -125,7 +125,7 @@ Rendering uses a `1280x768` canvas. The logical tile size is `32`, rendered at `
 - `.github/workflows/azure-static-web-apps.yml` - manual-only GitHub Actions deploy workflow for Azure Static Web Apps.
 - `dist/` - local deployment folder, ignored by Git.
 - `.tools/` and `node_modules/` - local tooling, ignored by Git.
-- `publish/` - clean Git working copy tracking `NickyScout/citizenship-valley`. The root `.git` is unreliable in the OneDrive workspace, so commits have been made from `publish/`.
+- `publish/` - REMOVED in V2. The legacy mirror is gone; Git runs from the repository root tracking `NickyScout/citizenship-valley-v2`. (Historical: V1 once used `publish/` because the root `.git` was unreliable in the OneDrive workspace.)
 
 ## 4. What Has Already Been Implemented
 
@@ -248,14 +248,13 @@ Manual Azure Static Web Apps deploy:
 
 ```powershell
 $env:PATH = "$PWD\.tools\node-v22.11.0-win-x64;$env:PATH"
-$token = az staticwebapp secrets list --name citizenship-gcse-game-nmilyaev --resource-group rg-citizenship-game --query properties.apiKey -o tsv
+$token = az staticwebapp secrets list --name citizenship-valley-v2 --resource-group rg-citizenship-game --query properties.apiKey -o tsv
 .\node_modules\.bin\swa.cmd deploy .\dist --deployment-token $token --env production
 ```
 
-Git operations should generally be run in `publish/`:
+Git operations run from the repository ROOT (the legacy `publish/` mirror is gone):
 
 ```powershell
-cd publish
 git status --short
 git add .
 git commit -m "Describe the change"
@@ -301,8 +300,8 @@ node qa-release-smoke.mjs
 Useful ad hoc checks:
 
 ```powershell
-Invoke-WebRequest -Uri https://lemon-meadow-063d62b03.7.azurestaticapps.net/game.js -UseBasicParsing
-Invoke-WebRequest -Uri https://lemon-meadow-063d62b03.7.azurestaticapps.net/curriculum.js -UseBasicParsing
+Invoke-WebRequest -Uri https://black-grass-036ec2d03.7.azurestaticapps.net/game.js -UseBasicParsing
+Invoke-WebRequest -Uri https://black-grass-036ec2d03.7.azurestaticapps.net/curriculum.js -UseBasicParsing
 ```
 
 ## 8. Environment Variables Needed
@@ -320,11 +319,13 @@ AZURE_STATIC_WEB_APPS_API_TOKEN
 Known Azure deployment context:
 
 ```text
-Azure Static Web App: citizenship-gcse-game-nmilyaev
+Azure Static Web App: citizenship-valley-v2
 Resource group: rg-citizenship-game
+Region: West Europe (Free SKU)
 Tenant ID: 556b39ce-6176-482c-a969-cc36dd218dc8
-Public URL: https://lemon-meadow-063d62b03.7.azurestaticapps.net
-GitHub repo: NickyScout/citizenship-valley
+Subscription: Visual Studio Enterprise (67e06712-3740-4723-8d30-c290f1a160b8)
+Public URL: https://black-grass-036ec2d03.7.azurestaticapps.net
+GitHub repo: NickyScout/citizenship-valley-v2
 ```
 
 Do not store or print the SWA deployment token.

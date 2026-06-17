@@ -1,5 +1,7 @@
 # План графической переработки Citizenship Valley (новая версия)
 
+> **V2 (2026-06-17).** Это активный план переработки графики для V2 (репозиторий и SWA `citizenship-valley-v2`, версия сброшена на `2.0.0`, live `https://black-grass-036ec2d03.7.azurestaticapps.net`). V2 форкнут из финала V1 — все геймплейные системы V1 сохраняются как фундамент. Раздел «Текущая позиция» ниже унаследован из позднего V1; сверяйте фактическое состояние с `docs/GAMEPLAY_PROGRESS_LOG.md` и кодом, и продвигайте план оттуда.
+
 Этот документ — план следующего, существенно обновлённого поколения игры. Главная цель: **качественный скачок графики**, в первую очередь на игровом поле (локации, персонажи, анимации, фоновая жизнь), затем — здания (снаружи и внутри), меню/инвентарь/Character, мини-игры, и параллельно — более интересный и разнообразный обучающий процесс.
 
 Предыдущий план (RPG-каркас, мини-игры, сюжет, Map Phase 1–5) закрыт и сохранён в `docs/GAMEPLAY_UPGRADE_OLD.md`. Всё, что там реализовано (стартовый поток, кастомизация, инвентарь, Progress Center, Character Panel, Story Beats, 7 мини-игр, Exam Simulation, vendors, curriculum tracking, QA-скрипты), **сохраняется** и является фундаментом. Новый план не ломает эти системы, а поднимает их визуальную планку.
@@ -232,7 +234,7 @@
 - `node --check game.js`, `node --check curriculum.js`.
 - `scripts/validate-world.js`, `scripts/validate-ui.js`, `scripts/audit-map.js`, `scripts/qa-route-audit.js`.
 - `qa-visual-smoke.mjs` (desktop/mobile, nonblank canvas, overflow), при изменениях NPC — `qa-regional-playthrough.mjs` и `qa-regional-quests-playthrough.mjs`, перед релизом — `qa-release-smoke.mjs`.
-- Синхронизация изменений в `publish/`; бамп cache-bust версии (`index.html` `data-app-version`, `?v=` у `game.js`/`curriculum.js`/`styles.css`) при выпуске.
+- Бамп cache-bust версии при выпуске — семантический патч `2.0.x` в `index.html` (5 маркеров: `styles.css?v=`, `data-app-version`, `#appVersion`, `curriculum.js?v=`, `game.js?v=`). Легаси-папка `publish/` убрана — деплой собирает `dist/` из корня.
 - Deploy — только по явному запросу; токены не выводить и не коммитить.
 
 Дополнить QA новыми проверками: валидность спрайт-манифеста и наличие файлов ассетов (как уже сделано для `PROP_ASSETS`), границы патруль-зон NPC, отсутствие конфликтов walker↔door.

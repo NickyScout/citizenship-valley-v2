@@ -28,7 +28,8 @@ Important files:
 
 Manual deploy target:
 
-- Azure Static Web Apps
-- Public URL: `https://lemon-meadow-063d62b03.7.azurestaticapps.net`
+- Azure Static Web Apps: `citizenship-valley-v2` (resource group `rg-citizenship-game`)
+- Public URL: `https://black-grass-036ec2d03.7.azurestaticapps.net`
+- GitHub repo: `NickyScout/citizenship-valley-v2`
 
 Do not include deployment secrets in code, docs, commits, logs, or PR descriptions.
