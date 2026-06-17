@@ -110,3 +110,68 @@ Current first pass: story scenes render regional title-card details with act lab
 - Keep contrast high enough to read against the current region palette.
 - Avoid blocking paths with decorative props unless the validator is updated and passable routes remain clear.
 - After map or visual changes, run `node scripts\validate-world.js` and `node qa-visual-smoke.mjs`.
+
+---
+
+# V2 2.5D Pixel-Art Spec (Stage 1)
+
+This section is the authoritative brief for the V2 new-graphics overhaul (see `docs/PLAN_STAGE1_2_5D.md`). It governs every PNG asset produced for V2. Strategy is **hybrid**: the agent builds the engine + fallback + this spec; the user generates the key pixel art in an external AI editor; we iterate per asset.
+
+## Lighting (global, fixed)
+
+- **One light direction for the whole game: top-left.** In code this is `LIGHT_DIR = {x:-0.6, y:-0.8}` (Stage 1A). Every cast shadow falls down-right; lit faces are top/left, shaded faces are bottom/right.
+- **Do NOT bake a cast (ground) shadow into any sprite** — the engine draws cast shadows via `drawCastShadow`. You MAY bake the object's own form shading (top-left lighter, bottom-right darker).
+- Keep one consistent sun across tiles, trees, buildings, hero and NPCs so the scene reads as one space.
+
+## Pixel scale (critical — read before drawing)
+
+`RENDER_SCALE = 1.5` is **non-integer**: art authored at logical size and scaled ×1.5 by the engine looks blurry. So **author at display resolution = logical × 1.5** and the engine draws it 1:1.
+
+| Asset | Logical size | **Author (PNG) size** | Pivot |
+|---|---|---|---|
+| Tile | 32×32 | **48×48** | none (grid) |
+| Tree / tall billboard | ~64×96 | **96×144** | bottom-centre |
+| Hero frame (later) | 32×48 cell | **48×72** | bottom-centre |
+| Building facade (later) | per `kind` | footprint W×48 wide | bottom |
+
+- Export crisp pixels (nearest-neighbour, no anti-aliasing/blur). The engine sets `imageSmoothingEnabled=false` for these.
+- Transparent background (PNG alpha). Keep the AI source file beside the runtime PNG in a `*-src/` folder (excluded from deploy, like `assets/characters/portraits-src/`).
+
+## Master palette
+
+Grounded in the current in-game colours so new art blends with the existing primitive fallback. Use these ramps; per-region sub-palettes shift hue/saturation, not the lighting logic.
+
+- **Grass:** shadow `#3f7a3f` · base `#63a858` · mid `#78c86d` · light `#9bd37c` · spec `#d7f28b`.
+- **Soil/path:** shadow `#6f685f` · base `#a8a79d` · light `#c9c6ba`.
+- **Water:** deep `#1d5968` · base `#226b78` · ripple `#3d8f9a` · foam/spec `#63b7bf`.
+- **Wood/dock:** shadow `#5c362d` · base `#8f5b3f` · light `#b77752` · spec `#c98a60`.
+- **Stone/wall:** shadow `#3f4738` · base `#626d55` · light `#788365`.
+- **Foliage (trees):** darkest `#235829` → `#27602f` → `#347a3f` → `#4d9a55` → `#58a85f` → rim `#73c06d` → spec `#9bd888`; trunk `#523521`/`#6a4a32`/`#825d40`.
+- **Neutrals:** outline `#1b232c` (avoid pure black) · UI parchment `#e6d3a4` · gold accent `#f2c14e`.
+
+Region tints (apply lightly over the ramps above): Village warm green `126,184,96` · Modern Britain blue `92,132,184` · Rights & Law violet-grey `120,110,156` · Democracy gold `204,172,92` · Participation teal `72,162,172` · Action Workshop lime `152,178,98` · Exam Hall purple `120,100,162`.
+
+## General rules for every sprite
+
+- Limited palette per material (≈3–5 tones) — pick from the ramps above; no gradients/dithering soup.
+- Soft single-pixel outline in `#1b232c` (or a darker shade of the fill) on silhouette edges; interactive objects keep a readable outline, flat décor can skip it.
+- Tiles must tile seamlessly on all four edges; variation must be subtle (the engine sprinkles variants deterministically, so a tile must not look obviously repeated).
+- No text baked into world art (signs/labels are drawn by code).
+
+## Naming & folders
+
+Filenames match the `*_ASSETS` keys the engine looks up. Drop PNGs here (source in the sibling `*-src/`):
+
+- Tiles → `assets/tiles/` (e.g. `tile-grass.png`).
+- Trees/foliage → `assets/tiles/` (e.g. `tree-oak.png`).
+- Buildings (later) → `assets/buildings/` (e.g. `building-townhall.png`).
+- Hero/NPC (later) → `assets/characters/`.
+
+## Stage 1D test assets (please generate these two first)
+
+Make ONLY these two first so we can validate the pipeline (crispness at ×1.5, alpha, pivot, palette) before mass-producing. The engine keeps its current primitive art as fallback, so nothing breaks while these are in progress.
+
+1. **`assets/tiles/tile-grass.png` — 48×48**, transparent or opaque, seamless on all edges. Use the Grass ramp; gentle top-left lighting; a few darker/lighter blades or specks, but calm enough to repeat across a field without obvious seams. No cast shadow.
+2. **`assets/tiles/tree-oak.png` — 96×144**, transparent, **pivot = bottom-centre** (trunk base centred on the bottom edge). A rounded oak: layered canopy using the Foliage ramp (darker lower-right, lit upper-left, a few rim/spec highlights), short trunk with bark shading. **No baked ground shadow** (engine adds it). Canopy may overhang the trunk; the player will walk behind the canopy.
+
+**Acceptance check (agent will run):** drop the PNGs in, serve the game, confirm 1:1 crisp pixels at ×1.5, correct transparency, the tree's feet sit on the tile under the engine's cast shadow, and the palette matches. Then I wire them via `TILE_ASSETS`/a tree asset hook with primitive fallback and add a file-exists check to `scripts/validate-world.js`. After validation we proceed to the rest of the tiles + variations.
