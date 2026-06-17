@@ -1407,13 +1407,13 @@ const TILE_ASSETS = {
 const TREE_ASSET = "assets/tiles/tree-oak.png";
 
 const HERO_ASSETS = {
-  base: "assets/characters/hero-base-spritesheet.svg"
+  base: "assets/characters/hero-base.png"
 };
 
 const heroBaseSprite = new AnimatedSprite({
   src: HERO_ASSETS.base,
-  frameWidth: 32,
-  frameHeight: 48,
+  frameWidth: 48,
+  frameHeight: 72,
   frames: 4,
   fps: 7,
   rows: { down: 0, left: 1, right: 2, up: 3 }
@@ -7650,9 +7650,13 @@ function isHeroMoving() {
 function drawHeroSpriteAsset(p, fallbackFrame, fallbackBob) {
   const direction = ["up", "left", "right", "down"].includes(p.dir) ? p.dir : "down";
   const frame = isHeroMoving() ? heroBaseSprite.frameIndex(animationClockMs) : 0;
-  if (!heroBaseSprite.draw(Math.round(p.x), Math.round(p.y), { state: direction, frame, width: 32, height: 48 })) return false;
+  // The PNG cell is 48x72; draw it into the hero's 32x48 footprint (top-left at p.x,p.y),
+  // nudged up 24px so the taller sprite's feet land on the same baseline as the footprint.
+  if (!heroBaseSprite.draw(Math.round(p.x) - 8, Math.round(p.y) - 24, { state: direction, frame, width: 48, height: 72 })) return false;
   const bob = isHeroMoving() ? (frame === 1 || frame === 3 ? 1 : 0) : fallbackBob;
-  drawHeroProfileMarkers(p, bob, frame, isHeroMoving());
+  // Stage 1E: the PNG sprite is already full-colour, so the V1 procedural recolor overlays
+  // (outfit/hair/cap/accent/arm/flag) are NOT drawn over it — only the held-tool indicator,
+  // which is a gameplay cue for the equipped tool. (Fallback drawHero* still self-colours.)
   if (p.dir === "left") drawHeroHeldItem(p, -1, bob);
   else if (p.dir === "right") drawHeroHeldItem(p, 1, bob);
   else if (p.dir === "down") drawHeroHeldItem(p, 1, bob);

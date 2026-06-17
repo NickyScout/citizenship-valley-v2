@@ -86,6 +86,7 @@ New-Item -ItemType Directory -Force -Path dist | Out-Null
 Copy-Item -Path index.html,styles.css,game.js,curriculum.js,staticwebapp.config.json -Destination dist -Force
 if (Test-Path assets) { Copy-Item -Path assets -Destination dist -Recurse -Force }
 if (Test-Path dist\assets\characters\portraits-src) { Remove-Item -LiteralPath dist\assets\characters\portraits-src -Recurse -Force }
+if (Test-Path dist\assets\characters\characters-src) { Remove-Item -LiteralPath dist\assets\characters\characters-src -Recurse -Force }
 if (Test-Path dist\assets\tiles\tiles-src) { Remove-Item -LiteralPath dist\assets\tiles\tiles-src -Recurse -Force }
 
 $env:PATH = "$PWD\.tools\node-v22.11.0-win-x64;$env:PATH"
