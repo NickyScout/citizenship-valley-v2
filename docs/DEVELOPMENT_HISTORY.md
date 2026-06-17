@@ -63,18 +63,7 @@ V2's goal is a **quality jump in graphics**, prioritising the play-field first. 
 
 Technical invariant: any new art must fall back to the existing primitive render (as `drawPropAsset` does).
 
-## Remaining roadmap (priority order)
-
-V1 delivered first passes of all stages below; V2 revisits them at higher art quality. Work in small, reviewable, QA-gated steps; bump the semantic version (`2.0.x`) on each deploy.
-
-1. **Play-field (top priority)** — terrain/tilesets + autotiling; hero spritesheet/animation; NPC recognisability + background life; building exteriors; atmosphere.
-2. **Building interiors by purpose.**
-3. **Menus / HUD / inventory / Character art.**
-4. **Mini-game art** (themed cards/boards, canvas animations, medal screens).
-5. **Learning depth & variety** (more check formats, "why" feedback, review/mastery, more scenario variety) — can run in parallel with 3–4.
-6. **Atmosphere & polish** (particles, ambient light, transitions, feedback) + a performance/asset-budget pass and accessibility checks.
-
-**Success criterion**: recognisable, living locations (varied terrain, animated hero, walking NPCs and background life), distinct building exteriors and themed interiors, richer menus/inventory/mini-games, and a varied, understandable learning flow — while keeping the app lightweight, saves compatible, and the "region → NPC → activity → reward → progress" loop stable.
+> **Note (2026-06-17):** the forward roadmap moved on from the original "play-field first passes" list. The active, agreed V2 direction is a multi-track rework led by a **2.5D depth** graphics engine (plus story, mini-games, items/equipment, audio, exam mode, progression, hub world, mentor, save slots). See [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) for the current staged plan; this section is kept as the historical art-direction record.
 
 ## QA gate per stage
 
