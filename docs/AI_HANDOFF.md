@@ -49,37 +49,9 @@ Serve the game; in `page.evaluate` set `window.requestAnimationFrame=()=>0` **an
 
 ---
 
-## 0. Current Status Update — 2026-06-05 (HISTORICAL — superseded by section 0 above)
+## 0. Historical status (superseded)
 
-Resume point after the planned PC restart:
-
-- Active roadmap marker: the previous plan (RPG phases A–F + Map Phase 1–5) is closed and archived as `docs/GAMEPLAY_UPGRADE_OLD.md`. The new graphics-generation plan `docs/GAMEPLAY_UPGRADE_PLAN.md` is active; G0, G1, and G2 are closed as first technical/asset-backed passes. The next practical stage is G3 NPC recognisability + background life. All previously shipped systems remain the foundation.
-- G0 added a shared `imageCache`/`getAssetImage`, an `AnimatedSprite` helper, safe frame timing (`nowMs`, `frameDeltaMs`, `animationClockMs`), an empty `drawAmbientLayer()` that respects Reduced Motion, and y-sorted character rendering. It intentionally did not change visible art or movement logic.
-- G1 added `TILE_ASSETS` for base SVG tiles under `assets/tiles/`, asset-backed tile rendering with primitive fallback, light deterministic terrain variation, water/road/plaza edge overlays, and `scripts/validate-world.js` checks for tile asset file existence. ASCII maps and collision data were not changed.
-- G2 added `assets/characters/hero-base-spritesheet.svg`, `HERO_ASSETS`, `heroBaseSprite`, `isHeroMoving`, and `drawHeroSpriteAsset`. The hero now tries an asset-backed 4-direction/4-frame spritesheet first, then falls back to the old procedural `drawHero*`; customization overlays and held tools remain visible on top.
-- Sections §20.1, §20.2, §20.3, and §20.4 are closed as first-pass graphics/readability work.
-- §20.1 added `docs/VISUAL_STYLE_GUIDE.md`, item PNG assets, seed UI/region prop assets, stronger regional motifs, and subtle Apathy traces.
-- §20.2 added shared hero visual presets for HUD portrait, Character panel, and canvas sprite; held tools now render as distinct quill/blade silhouettes.
-- §20.3 added Backpack category frames, selected item detail panel, item effect summaries, mouse/keyboard item selection, and quest item lock/unsellable markers.
-- §20.4 added regional story title-card details, themed mini-game visual stage layouts, and visual medal/reward blocks on completion screens.
-- §22 Map Phase 1 added `scripts/audit-map.js`, generated `docs/MAP_AUDIT.md`, and extended `scripts/validate-world.js` with an NPC-door interaction conflict check.
-- §22 Map Phase 2 started with Modern Britain Borough: Media Plaza, Source Kiosk, and Underground Gate signposts plus a newspaper `kiosk` prop and supporting plaza props.
-- Rights & Law Quarter now has Court Square, Rights Cards, and Clock Lift Gate signposts plus `scales`/`notice` legal props and supporting route props.
-- Democracy Capital now has Ballot Hall, Count Table, Debate Steps, and Ferry Gate signposts plus `ballotBox`, `podium`, and `poster` election/debate props.
-- Participation Harbour now has Petition Pier, Regatta Stand, Volunteer Dock, and Campaign Boat Gate signposts plus `petitionStand`, `boat`, and `banner` harbour/campaign props.
-- Action Workshop now has Plan Board, Campaign Planner, Data Bench, and Lighthouse Bridge signposts plus `planningBoard`, `surveyBox`, `dataCards`, and `campaignTable` workshop props.
-- Exam Hall Castle now has Final Gate, Exam Desk, Source Archive, and Debate Bench signposts plus `finalGate`, `examDesk`, `sourceArchive`, and `debateBench` exam props.
-- Map Phase 2 first pass is closed for all exterior regions; `docs/MAP_AUDIT.md` records signs/props for every exterior region.
-- Map Phase 3 started: mini-game host world markers now show dynamic completion labels from `state.miniGameScores` (`New`, `Try`, `Bronze`, `Silver`, `Gold`) without changing NPC menu launch flow or save format.
-- First explicit trigger props are wired: Source Detective uses the Modern Britain `kiosk`, Rights Match uses the Rights & Law `notice`, and Petition Regatta uses the Participation `petitionStand`; these render `Play` markers and are audited/validated.
-- Remaining trigger props are also wired: Ballot Count uses `ballotBox`, Debate Arena uses `podium` and `debateBench`, Campaign Planner uses `planningBoard`, and Exam Simulation uses `examDesk`.
-- Progress → Mini-games now shows NPC host, trigger prop location, and dynamic map marker status for each mini-game.
-- Map Phase 4 added PNG runtime assets plus SVG source assets for the most visible trigger props under `assets/props/region/`; canvas rendering uses `PROP_ASSETS` with primitive fallback.
-- Map Phase 5 added `scripts/qa-route-audit.js`, `docs/MAP_ROUTE_QA.md`, and `qa-route-audit-result.json`; route QA passed for all 7 exterior regions.
-- Focused QA after §20.4 passed: `node --check game.js`, `node --check curriculum.js`, `node scripts\validate-ui.js`, `node scripts\validate-world.js`, `node qa-ui-regression.mjs`, and `node qa-visual-smoke.mjs`.
-- `publish/` was committed/pushed and the public Azure Static Web Apps site was deployed after G0/G1/G2 (`b11ff46`). Live markers checked: deployed `game.js` contains `HERO_ASSETS`/`TILE_ASSETS`, and live hero/tile SVG assets are available.
-- Important user preference: after every completed game-development stage, publish the changes to the public Azure Static Web Apps site for the user's visual review/testing. Do not stop at local validation or GitHub push.
-- Root `C:\PROJECTS\Citizenship Game` is not a Git repo. Use `publish/` for Git status, commits, and pushes.
+The detailed V1 status narrative that used to live here (G0–G9 graphics generation, §20.x readability passes, Map Phases 1–5, per-stage notes) is consolidated in `docs/DEVELOPMENT_HISTORY.md`. Section 0 above is the authoritative current state.
 
 ## 1. Project Purpose
 
@@ -95,7 +67,7 @@ This is a static HTML/CSS/JavaScript canvas game. There is no bundler, framework
 - `styles.css` handles page layout, HUD, inventory UI, hero portraits, item category frames/detail panel, settings/accessibility modes, and the centered NPC dialogue window.
 - `game.js` contains the game loop, canvas rendering, world data, NPCs, quests, movement, inventory, mini-games, story state, save/load, and UI event handling.
 - `curriculum.js` defines the external curriculum guide and enriches quest explanations through `window.GCSE_CURRICULUM_INDEX`.
-- Browser progress is saved in `localStorage` under `citizenshipValleySaveV1`; the current save version is `SAVE_VERSION = 6`. Browser display settings are saved separately under `citizenshipValleySettingsV1`.
+- Browser progress is saved in `localStorage` under `citizenshipValleySaveV1`; the current save version is `SAVE_VERSION = 7` (see `migrateSave()`). Browser display settings are saved separately under `citizenshipValleySettingsV1`.
 - Azure Static Web Apps hosts the public static site. Current workflow expectation: after each completed implementation stage, validate locally, commit/push from the repository root, deploy to production SWA, and verify live markers/assets. Do not print deployment tokens. (The legacy `publish/` sync step was removed in V2.)
 
 Rendering uses a `1280x768` canvas. The logical tile size is `32`, rendered at `1.5x` so visible tiles are `48px`. The camera follows the player. The draw pipeline is split into layers: ground, paths, buildings, props, characters, and world UI.
@@ -108,6 +80,8 @@ Rendering uses a `1280x768` canvas. The logical tile size is `32`, rendered at `
 - `curriculum.js` - editable GCSE topic map grouped by location, with NPC prompts and longer correct-answer explanations.
 - `CURRICULUM_MAP.md` - broader course/world planning notes.
 - `README.md` - short project overview and play instructions.
+- `docs/PROJECT_FEATURES.md` - consolidated description of current features and characteristics.
+- `docs/DEVELOPMENT_HISTORY.md` - condensed build history, key decisions, art-direction principles, and the forward roadmap.
 - `docs/QA_RUNBOOK.md` - canonical local QA command set.
 - `docs/MAP_AUDIT.md` - generated Map Phase 1 audit of spawn, landmarks, NPCs, doors, mini-game anchors, travel gates, blocked zones, interiors, and exam rooms.
 - `docs/BALANCE_REVIEW.md` - latest XP/Focus/coin/readiness balance notes.
@@ -127,77 +101,9 @@ Rendering uses a `1280x768` canvas. The logical tile size is `32`, rendered at `
 - `.tools/` and `node_modules/` - local tooling, ignored by Git.
 - `publish/` - REMOVED in V2. The legacy mirror is gone; Git runs from the repository root tracking `NickyScout/citizenship-valley-v2`. (Historical: V1 once used `publish/` because the root `.git` was unreliable in the OneDrive workspace.)
 
-## 4. What Has Already Been Implemented
+## 4. What has been implemented
 
-- Seven curriculum regions:
-  - Citizenship Village
-  - Modern Britain Borough
-  - Rights & Law Quarter
-  - Democracy Capital
-  - Participation Harbour
-  - Action Workshop
-  - Exam Hall Castle
-- NPC casts for every region.
-- Three or more curriculum-linked quests per major NPC in the first village, and regional topic quests for later regions.
-- Quest flow:
-  - accept a quest from an NPC
-  - travel to another NPC to collect evidence
-  - return to the giver
-  - answer a GCSE-style check question
-  - earn coins/items/knowledge
-- Travel gates:
-  - all regional quests must be complete
-  - the gate asks three questions
-  - all three must be correct to unlock the next region
-- RPG systems:
-  - coins
-  - inventory
-  - outfits/tools/treasures/consumables
-  - equip/use/sell actions
-  - badges
-  - automatic localStorage save/load
-  - reset via `R` or `New Game`
-- Accessibility/settings systems:
-  - Settings overlay from HUD Controls
-  - persistent Large text, High contrast, and Reduced motion toggles
-  - reset-save control that keeps display settings
-- Graphics/readability first pass:
-  - visual style guide and region motif labels
-  - asset-backed item thumbnails with CSS fallback
-  - Apathy Shade story asset and subtle unresolved-region traces
-  - hero visual presets shared by HUD portrait, Character panel, and canvas sprite
-  - visible held-tool silhouettes for `Justice Quill` and `Debate Blade`
-  - Backpack selected-item detail panel with category frames and quest-item lock markers
-  - regional story title-card details with landmarks and key objects
-  - themed mini-game visual layouts and visual medal/reward result blocks
-- Mini-game and story systems:
-  - mini-games are tied to regional NPCs and can be launched from NPC menus
-  - Progress Center tracks story, quests, buildings, mini-games, curriculum, achievements, and choices against Apathy
-  - Exam Simulation has multiple sections, section breakdown, and ending influence
-- QA automation:
-  - VM validation for world reachability and UI render/saved-state invariants
-  - headless browser regression and visual smoke scripts
-  - regional mini-game host playthrough, regional quest/gate playthrough, and local release smoke
-- Controls:
-  - WASD and arrow-key movement
-  - `E` to talk/inspect
-  - `1`, `2`, `3` to answer questions
-- Developer travel menu for switching locations quickly during testing.
-- Improved canvas rendering:
-  - larger canvas
-  - camera
-  - layered drawing
-  - more detailed player, NPCs, buildings, props
-  - four-direction walking animation for the player
-- NPC placement fix:
-  - NPCs that were overlapping building collision tiles were moved to reachable nearby positions.
-- NPC dialogue upgrade:
-  - central square dialogue/modal window
-  - unique inline SVG avatar inside every NPC interaction flow
-  - faces are generated from NPC id, role, colour, and inferred gender
-  - expression changes for talking, quest prompts, questions, wrong answers, rewards, and gates
-- Curriculum content extraction:
-  - `curriculum.js` now stores sections, topics, NPC prompts, and longer correct-answer explanations.
+See `docs/PROJECT_FEATURES.md` for the full, current feature list — world & content (7 regions, 45 quests, 5 exam rooms, travel gates), the core loop, RPG systems (customisation, stats, Exam Readiness, inventory/economy, achievements), the 11 mini-games, story & endings, learning systems, graphics & presentation, accessibility, controls, and QA tooling.
 
 ## 5. Current TODO List
 
@@ -206,20 +112,16 @@ Rendering uses a `1280x768` canvas. The logical tile size is `32`, rendered at `
 - Re-run `node scripts\audit-map.js --write` and `node scripts\validate-world.js` after map data changes.
 - Keep automated QA current when changing gameplay, UI, maps, save/load, or content.
 - Run quick QA for focused UI changes and full QA before handoff/release candidates.
-- Update `docs/VISUAL_STYLE_GUIDE.md`, `docs/GAMEPLAY_PROGRESS_LOG.md`, and `docs/GAMEPLAY_UPGRADE_PLAN.md` after each graphics subsection.
-- Sync root changes into `publish/` after validated work, commit/push from `publish/`, deploy to Azure Static Web Apps production, and verify the live site after every completed game-development stage.
+- Update `docs/VISUAL_STYLE_GUIDE.md`, `docs/PROJECT_FEATURES.md`, and `docs/DEVELOPMENT_HISTORY.md` after each graphics subsection.
+- After validated work, commit/push from the repository root, deploy to Azure Static Web Apps production, and verify the live site after every completed game-development stage.
 - Later backlog: move more hardcoded world/quest/NPC data out of `game.js`, improve curriculum coverage against the exact exam board specification, and verify the manual GitHub Actions deploy once the SWA token secret is configured.
 
-## 6. Known Bugs or Failing Tests
+## 6. Known bugs / notes
 
-- No blocking automated QA issues are known at this handoff. Focused local QA after §20.4 completed with `blockingIssues: 0` for UI regression and visual smoke.
-- No blocking automated QA issues are known after the latest live deploy. Browser cache can still show stale deployed assets; use `Ctrl+F5` when checking the public site.
-- `node --check game.js` and similar shell syntax checks can fail in this OneDrive/Codex sandbox with `EPERM` path access errors, even when the JS parses correctly. A workaround used successfully was reading file content through the Node REPL and running `new Function(source)`.
-- The GitHub Actions deploy workflow is manual-only (`workflow_dispatch`) so normal pushes should not trigger failing deploy emails. The job id is `build_and_deploy_job`; manual workflow deploy still requires the GitHub secret `AZURE_STATIC_WEB_APPS_API_TOKEN`.
-- Root `.git` is not reliable in this workspace. Use `publish/` for Git operations unless the repository setup is repaired.
 - Browser cache can show stale deployed assets; use `Ctrl+F5` when checking the public site.
-- NPC avatars are procedural SVGs, not hand-painted or generated raster portraits. They are unique and role-aware but still visually simple.
-- The dev travel menu is intentionally still visible for testing and should remain available during prototype work.
+- No blocking automated QA issues are known at the V1 fork point (UI regression and visual smoke report `blockingIssues: 0`).
+- The GitHub Actions deploy workflow is manual-only (`workflow_dispatch`); the job id is `build_and_deploy_job` and it needs the repo secret `AZURE_STATIC_WEB_APPS_API_TOKEN`. Normal pushes do not trigger it.
+- The dev travel menu is intentionally visible for testing and should remain available during prototype work.
 
 ## 7. Commands to Build, Run, Lint and Test
 
@@ -332,22 +234,10 @@ Do not store or print the SWA deployment token.
 
 ## 9. Important Design Decisions
 
-- Keep the app static and simple for now. The priority is fast iteration and easy Azure Static Web Apps hosting.
-- Use `localStorage` for save/load because there is no backend yet.
-- Keep the developer travel menu visible during prototyping to speed testing across regions.
-- Use data-driven curriculum where possible. `curriculum.js` is the first step; more quest/world data should eventually move out of `game.js`.
-- Use a central square NPC dialogue window for every interaction type so questions, quest text, travel gates, and feedback feel consistent.
-- Use procedural SVG portraits now. This keeps each NPC visually distinct without managing many raster files, and mood changes are handled by drawing different mouths/brows/accessories.
-- Preserve pixel-art feel in canvas rendering, while replacing the highest-value placeholders with small PNG/WebP assets under `assets/`.
-- Keep travel gates gated by quest completion plus three correct answers, reinforcing mastery before progression.
-- Avoid adding a framework until the static JS file becomes too difficult to maintain.
-- Deployment is expected after each completed game-development stage for user visual testing. Do not print SWA deployment tokens; keep them in local variables only.
+See `docs/DEVELOPMENT_HISTORY.md` → "Key design decisions" and "Hard-won lessons" for the full list (stay static/simple, education first, `curriculum.js` as source of truth, save compatibility via `migrateSave`, primitive fallback for every asset, reachability invariants, deploy only on explicit request).
 
 ## 10. Next Recommended Task
 
-Next follow-up:
-
-1. Start G3 — NPC recognisability + background life.
-2. After G3 implementation, run validation, sync `publish/`, commit/push, deploy to the public Azure Static Web Apps site, and verify live markers/assets for user visual testing.
+Continue the V2 new-graphics overhaul per the roadmap in `docs/DEVELOPMENT_HISTORY.md` (play-field first). Work in small, QA-gated steps; bump the semantic version (`2.0.x`) and deploy only on explicit request.
 
 Keep `scripts/qa-route-audit.js --write`, `node scripts\validate-world.js`, `node qa-visual-smoke.mjs`, and regional playthrough scripts in the release checklist after future map changes.

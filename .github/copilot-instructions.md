@@ -24,6 +24,8 @@ Important files:
 - `game.js` - game loop, rendering, world data, movement, quests, inventory, save/load
 - `curriculum.js` - GCSE curriculum topics and expanded correct-answer explanations
 - `docs/AI_HANDOFF.md` - detailed handoff context for future coding agents
+- `docs/PROJECT_FEATURES.md` - consolidated current features and characteristics
+- `docs/DEVELOPMENT_HISTORY.md` - condensed build history, key decisions, and forward roadmap
 - `AGENTS.md` - practical repository instructions for agents
 
 Manual deploy target:
