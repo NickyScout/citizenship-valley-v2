@@ -6968,6 +6968,55 @@ function drawBuildingRoof(kind, x, y, w, h, roof, wall) {
   }
 }
 
+// Stage 1 buildings: per-kind material palette (master palette from VISUAL_STYLE_GUIDE),
+// so the facade body, roof and entrance share one cohesive, softly-shaded look that scales
+// to each building's box. `wall` is the mid; lt/dk/sh are the light/shade/plinth steps;
+// roof is the roof mid; trim is the accent; glow is the warm window-interior tint.
+const BUILDING_MATERIALS = {
+  townhall: { wall: "#b7a07a", lt: "#d6c39b", dk: "#8c785a", sh: "#5f4f3a", roof: "#9a5a4d", trim: "#f2c14e", glow: "#ffe6a6" },
+  court: { wall: "#c2bfb2", lt: "#e0ddcf", dk: "#928f80", sh: "#5f5c52", roof: "#7c8a93", trim: "#caa64a", glow: "#fdebb4" },
+  library: { wall: "#c7b38d", lt: "#e6d6b1", dk: "#9b8662", sh: "#6a5942", roof: "#8a5a40", trim: "#e6d3a4", glow: "#ffe1a0" },
+  press: { wall: "#b1aa9c", lt: "#d2ccbd", dk: "#857e70", sh: "#574f44", roof: "#5a6066", trim: "#e36b5d", glow: "#cfe0ff" },
+  police: { wall: "#9aa3aa", lt: "#bcc4c9", dk: "#717a80", sh: "#49525a", roof: "#21345f", trim: "#f4f6fb", glow: "#d6e4ff" },
+  garden: { wall: "#caa06a", lt: "#e4bd86", dk: "#9b7548", sh: "#6a5030", roof: "#3f8a47", trim: "#6fbf73", glow: "#ffe6a6" },
+  exam: { wall: "#c2bcae", lt: "#e0dccb", dk: "#928c7d", sh: "#615c50", roof: "#8a8675", trim: "#caa64a", glow: "#fdebb4" },
+  campaign: { wall: "#c5b393", lt: "#e3d4b4", dk: "#9a8765", sh: "#6a5a42", roof: "#9a5a4d", trim: "#e36b5d", glow: "#ffe1a0" },
+  generic: { wall: "#c4b48f", lt: "#e2d4b1", dk: "#988763", sh: "#695b42", roof: "#9a5a4d", trim: "#d3a74d", glow: "#ffe1a0" }
+};
+
+// A single glazed window: stone frame, cool sky reflection up top, warm interior glow below,
+// muntin cross-bars and a light sill — lit from the top-left to match the facade shading.
+function drawBuildingWindow(wx, wy, ww, wh, mat) {
+  rect(wx - 1, wy - 1, ww + 2, wh + 2, mat.sh);
+  rect(wx, wy, ww, wh, mat.dk);
+  rect(wx + 1, wy + 1, ww - 2, wh - 2, "#bcd4e6");
+  rect(wx + 1, wy + 1, Math.round((ww - 2) / 2), Math.round((wh - 2) / 2), "#dce9f2");
+  rect(wx + 1, wy + Math.round(wh / 2), ww - 2, Math.round(wh / 2) - 1, mat.glow);
+  rect(wx + 1, wy + 1, 2, 2, "#ffffff");
+  rect(wx + Math.round(ww / 2) - 1, wy + 1, 1, wh - 2, mat.dk);
+  rect(wx + 1, wy + Math.round(wh / 2) - 1, ww - 2, 1, mat.dk);
+  rect(wx - 2, wy + wh, ww + 4, 2, mat.lt);
+}
+
+// Parametric window grid sized to the facade, kept clear of the door. One upper row always;
+// a second (lower) row on tall buildings, skipping the column that would hit a bottom door.
+function drawBuildingWindows(x, y, w, h, mat, doorSide) {
+  const winW = 14, winH = 18, gap = 12;
+  const cols = Math.max(2, Math.floor((w - 20 + gap) / (winW + gap)));
+  const totalW = cols * winW + (cols - 1) * gap;
+  const startX = Math.round(x + (w - totalW) / 2);
+  const rowYs = h >= 78 ? [y + 12, y + 36] : [y + Math.round((h - 28) * 0.42)];
+  const doorCx = doorSide === "left" ? x + 4 : doorSide === "right" ? x + w - 4 : x + w / 2;
+  rowYs.forEach((wy, r) => {
+    const lowerRow = r === rowYs.length - 1 && rowYs.length === 2;
+    for (let c = 0; c < cols; c += 1) {
+      const wx = startX + c * (winW + gap);
+      if (lowerRow && doorSide === "bottom" && Math.abs(wx + winW / 2 - doorCx) < winW + 6) continue;
+      drawBuildingWindow(wx, wy, winW, winH, mat);
+    }
+  });
+}
+
 function drawBuilding(x, y, w, h, wall, roof, label, kind, doorSide = "bottom") {
   const buildingKind = kind || buildingKindFromLabel(label);
   ctx.save();
@@ -6983,35 +7032,29 @@ function drawBuilding(x, y, w, h, wall, roof, label, kind, doorSide = "bottom") 
   ctx.restore();
   rect(x + 5, y + h - 2, w + 10, 9, "rgba(0, 0, 0, .32)");
   rect(x - 7, y + h + 5, w + 16, 5, "rgba(0, 0, 0, .18)");
-  drawBuildingRoof(buildingKind, x, y, w, h, roof, wall);
-  rect(x, y, w, h, wall);
-  drawPixelPattern(x + 3, y + 4, w - 6, h - 26, ["rgba(255,255,255,.16)", "rgba(80,60,45,.14)"], 14, x + y);
-  // Stage 1C: 2.5D volume cues, lit from the top-left (matches LIGHT_DIR). The left wall
-  // face catches light, the right face falls into shade, and the roofline casts a soft
-  // overhang shadow onto the top of the facade — so the flat front reads as a 3D block.
-  rect(x, y, 5, h - 18, shadeHex(wall, 18));
-  rect(x + w - 7, y, 7, h - 18, shadeHex(wall, -26));
-  rect(x, y, w, 5, "rgba(18,12,8,.24)");
-  for (let by = y + 8; by < y + h - 25; by += 12) {
-    for (let bx = x + 6 + ((by / 12) % 2 ? 8 : 0); bx < x + w - 8; bx += 18) {
-      rect(bx, by, 8, 1, "rgba(82,64,52,.18)");
-    }
+  const mat = BUILDING_MATERIALS[buildingKind] || BUILDING_MATERIALS.generic;
+  drawBuildingRoof(buildingKind, x, y, w, h, mat.roof, mat.wall);
+
+  // --- Facade body: soft 2.5D pixel shading, light from the top-left (LIGHT_DIR). ---
+  rect(x, y, w, h, mat.wall);
+  rect(x, y, Math.max(6, Math.round(w * 0.16)), h - 16, mat.lt);
+  rect(x + Math.round(w * 0.16), y, Math.round(w * 0.20), h - 16, shadeHex(mat.wall, 8));
+  rect(x + w - Math.round(w * 0.22), y, Math.round(w * 0.22), h - 16, mat.dk);
+  // roofline overhang shadow on the upper facade + a thin top catch-light
+  rect(x, y, w, 5, "rgba(18,12,8,.26)");
+  rect(x, y + 5, w, 2, shadeHex(mat.wall, 12));
+  // faint horizontal stone courses + lit/shaded corner quoins (carved-edge read)
+  for (let by = y + 12; by < y + h - 22; by += 9) rect(x + 4, by, w - 8, 1, "rgba(0,0,0,.05)");
+  for (let qy = y + 6; qy < y + h - 20; qy += 12) {
+    rect(x, qy, 4, 7, mat.lt);
+    rect(x + w - 4, qy, 4, 7, mat.sh);
   }
-  rect(x, y + h - 20, w, 20, "#9a9284");
-  for (let sx = x + 4; sx < x + w - 4; sx += 18) {
-    rect(sx, y + h - 18, 14, 2, "#6f685f");
-    rect(sx + 1, y + h - 10, 12, 2, "#b7aca0");
-  }
-  rect(x + 8, y + 8, 24, 24, "#5b3434");
-  rect(x + 12, y + 12, 16, 16, "#9f504b");
-  rect(x + 14, y + 14, 12, 3, "#d17870");
-  rect(x + 7, y + 6, 26, 4, "#3f2c2a");
-  rect(x + 10, y + 31, 20, 3, "#6d4939");
-  rect(x + w - 34, y + 10, 24, 22, "#513b35");
-  rect(x + w - 30, y + 14, 16, 14, "#d0a56d");
-  rect(x + w - 28, y + 16, 12, 3, "#f1c986");
-  rect(x + w - 22, y + 14, 2, 14, "#513b35");
-  rect(x + w - 30, y + 20, 16, 2, "#513b35");
+  // stone plinth + steps along the base
+  rect(x, y + h - 16, w, 16, mat.sh);
+  rect(x, y + h - 16, w, 2, shadeHex(mat.sh, 16));
+  rect(x, y + h - 4, w, 4, shadeHex(mat.sh, -14));
+  // glazed, warm-lit windows sized to the facade, clear of the door
+  drawBuildingWindows(x, y, w, h, mat, doorSide);
   // Painted facade door. Anchored to match the actual E-interaction door side so the
   // building's drawn entrance always coincides with where "E Enter" appears. Bottom is
   // flush to the base (default); side doors sit mid-height under the golden door marker.
@@ -7022,8 +7065,8 @@ function drawBuilding(x, y, w, h, wall, roof, label, kind, doorSide = "bottom") 
   rect(doorCx - 7, doorTopY + 4, 14, 19, "#805344");
   rect(doorCx - 5, doorTopY + 6, 10, 3, "#a96e55");
   rect(doorCx + 4, doorTopY + 13, 3, 3, "#f2c14e");
-  rect(x - 4, y, 4, h, "#6e5f56");
-  rect(x + w, y, 4, h, "#5c5049");
+  rect(x - 4, y, 4, h, shadeHex(mat.wall, -6));
+  rect(x + w, y, 4, h, shadeHex(mat.wall, -22));
   rect(x + 4, y + h - 4, w - 8, 2, "#eee1c0");
   const signW = Math.max(54, label.length * 7);
   const signX = x + w / 2 - signW / 2;
@@ -7036,7 +7079,7 @@ function drawBuilding(x, y, w, h, wall, roof, label, kind, doorSide = "bottom") 
   ctx.font = "10px Georgia";
   ctx.textAlign = "center";
   ctx.fillText(label, x + w / 2, signY + 9);
-  drawBuildingEntrance(buildingKind, x, y, w, h, wall, label);
+  drawBuildingEntrance(buildingKind, x, y, w, h, mat.wall, label);
 }
 
 // --- Stage 1F: per-NPC recolour of the shared villager spritesheet -------------------

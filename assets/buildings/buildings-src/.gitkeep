@@ -1,0 +1,3 @@
+# Placeholder so assets/buildings/buildings-src/ is tracked. Drop raw AI building art here
+# (magenta #FF00FF background) named building-<kind>.png, then run scripts/process-building-art.ps1.
+# Kinds: townhall, court, library, press, police, garden, exam, campaign, generic.
