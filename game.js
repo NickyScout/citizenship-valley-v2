@@ -1422,6 +1422,17 @@ const heroBaseSprite = new AnimatedSprite({
   rows: { down: 0, left: 1, right: 2, up: 3 }
 });
 
+// Stage 1F: shared villager walk sheet (4x4), recoloured per NPC at runtime (skin/hair/coat).
+const VILLAGER_ASSET = "assets/characters/villager-base.png";
+const villagerSprite = new AnimatedSprite({
+  src: VILLAGER_ASSET,
+  frameWidth: 48,
+  frameHeight: 72,
+  frames: 4,
+  fps: 6,
+  rows: { down: 0, left: 1, right: 2, up: 3 }
+});
+
 const VENDORS = {
   mayor: {
     title: "Village Supplies",
@@ -7028,6 +7039,99 @@ function drawBuilding(x, y, w, h, wall, roof, label, kind, doorSide = "bottom") 
   drawBuildingEntrance(buildingKind, x, y, w, h, wall, label);
 }
 
+// --- Stage 1F: per-NPC recolour of the shared villager spritesheet -------------------
+// The base sheet uses a neutral grey tunic, brown hair, and a warm skin ramp. For each NPC
+// we luminance-tint three pixel categories — clothing->coat, skin->tone, hair->colour —
+// into a cached offscreen sheet, so the crowd stays portrait-distinct without 30 art files.
+// Drawn at (person.x-8, person.y-24) so the 48x72 cell's feet land on the procedural baseline.
+let villagerBaseData = null; // {w,h,data} read once from the decoded PNG
+const villagerTintCache = {};
+// Chest kits shift up/right onto the villager torso; head pieces (police helmet, book
+// glasses) use hy. Tuned to the measured villager anatomy (head y8..26, torso y34..61).
+const VILLAGER_KIT_ANCHOR = { dx: 3, dy: -5, hy: -10 };
+
+function rgbFromHex(hex) {
+  const h = String(hex || "#808080").replace("#", "");
+  return { r: parseInt(h.slice(0, 2), 16) || 0, g: parseInt(h.slice(2, 4), 16) || 0, b: parseInt(h.slice(4, 6), 16) || 0 };
+}
+
+function ensureVillagerBaseData() {
+  if (villagerBaseData) return true;
+  const img = getAssetImage(VILLAGER_ASSET);
+  if (!img || !img.complete || !img.naturalWidth) return false;
+  try {
+    const w = img.naturalWidth, h = img.naturalHeight;
+    const cv = document.createElement("canvas");
+    cv.width = w; cv.height = h;
+    const c = cv.getContext("2d");
+    c.drawImage(img, 0, 0);
+    villagerBaseData = { w, h, data: c.getImageData(0, 0, w, h).data };
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Build (or fetch) a recoloured 192x288 villager sheet for one skin/hair/coat combination.
+function getTintedVillager(skinHex, hairHex, coatHex) {
+  const key = `${skinHex}|${hairHex}|${coatHex}`;
+  if (villagerTintCache[key]) return villagerTintCache[key];
+  if (!ensureVillagerBaseData()) return null;
+  const { w, h, data } = villagerBaseData;
+  const cv = document.createElement("canvas");
+  cv.width = w; cv.height = h;
+  const c = cv.getContext("2d");
+  const out = c.createImageData(w, h);
+  const o = out.data;
+  const skin = rgbFromHex(skinHex), hair = rgbFromHex(hairHex), coat = rgbFromHex(coatHex);
+  const cellH = 72;
+  for (let i = 0; i < data.length; i += 4) {
+    const a = data[i + 3];
+    if (a < 128) { o[i + 3] = 0; continue; }
+    const r = data[i], g = data[i + 1], b = data[i + 2];
+    const lum = (r + g + b) / 3;
+    const cy = Math.floor((i >> 2) / w) % cellH;
+    let tr, tg, tb;
+    if (Math.max(r, g, b) - Math.min(r, g, b) <= 30) {       // clothing (neutral grey) -> coat
+      const s = lum / 192;
+      tr = coat.r * s; tg = coat.g * s; tb = coat.b * s;
+    } else if (r > 150 && r > b + 30) {                       // skin -> tone
+      const s = lum / 200;
+      tr = skin.r * s; tg = skin.g * s; tb = skin.b * s;
+    } else if (r > b + 8 && cy < 34) {                        // hair (upper region) -> colour
+      const s = lum / 70;
+      tr = hair.r * s; tg = hair.g * s; tb = hair.b * s;
+    } else {                                                  // shoes / dark outline -> keep
+      tr = r; tg = g; tb = b;
+    }
+    o[i] = tr > 255 ? 255 : tr;
+    o[i + 1] = tg > 255 ? 255 : tg;
+    o[i + 2] = tb > 255 ? 255 : tb;
+    o[i + 3] = a;
+  }
+  c.putImageData(out, 0, 0);
+  villagerTintCache[key] = cv;
+  return cv;
+}
+
+// Draw an NPC as the recoloured villager sprite (front/down facing) plus its role kit,
+// breathing with the shared idle sway. Returns false (procedural fallback) until ready.
+function drawNpcVillagerSprite(person, style) {
+  if (!villagerSprite.isReady()) return false;
+  const sheet = getTintedVillager(style.skin, style.hair, style.coat);
+  if (!sheet) return false;
+  const rm = settings.reducedMotion;
+  const speaking = Boolean(person.bubble);
+  const sway = rm ? 0 : Math.round(0.9 + 0.9 * Math.sin(animationClockMs / (speaking ? 360 : 760) + style.animPhase));
+  const dx = Math.round(person.x) - 8;
+  const dy = Math.round(person.y) - 24;
+  if (sway) ctx.translate(0, -sway);
+  ctx.drawImage(sheet, 0, 0, 48, 72, dx, dy, 48, 72); // row 0 (down), frame 0 (standing)
+  drawNpcRoleKit(person, style.role, style, VILLAGER_KIT_ANCHOR);
+  if (sway) ctx.translate(0, sway);
+  return true;
+}
+
 function drawPerson(person) {
   const style = npcAppearance(person);
   const role = style.role;
@@ -7051,6 +7155,15 @@ function drawPerson(person) {
 
   // §S6 / Stage 1A: soft contact shadow at the feet via the shared directional light.
   drawCastShadow(x + 12, y + 47, 13 + build, OBJECT_HEIGHTS.person);
+
+  // Stage 1F: asset-backed villager body (recoloured per NPC) replaces the procedural
+  // rect-art when the sheet is ready; the role kit + quest marker still layer on top.
+  if (drawNpcVillagerSprite(person, style)) {
+    // The villager sprite's head reaches ~16px higher than the procedural body, so float
+    // the quest marker above it (otherwise the "!" sits on the hair like a crown).
+    if (!state.completed.has(person.id)) drawNpcQuestMarker(x, y - 16);
+    return;
+  }
 
   // legs/shoes — planted (do NOT breathe)
   rect(x + 5, y + 38, 7, 9, "#2b2d2f");
@@ -7229,9 +7342,12 @@ function npcRole(person) {
   return (person && NPC_ROLE[person.id]) || avatarRole(person);
 }
 
-function drawNpcRoleKit(p, role, style) {
-  const x = p.x;
-  const y = p.y;
+function drawNpcRoleKit(p, role, style, anchor) {
+  const x = p.x + (anchor ? anchor.dx : 0);
+  const y = p.y + (anchor ? anchor.dy : 0);
+  // Head pieces (police helmet, book glasses) reference hy so they ride higher on the
+  // taller villager sprite; with no anchor (procedural body) hy === y, so nothing moves.
+  const hy = p.y + (anchor ? anchor.hy : 0);
   const gold = "#f2c14e", goldDk = "#b8881f";
   const paper = "#f5f0df";
   const ink = "#243140";
@@ -7248,13 +7364,13 @@ function drawNpcRoleKit(p, role, style) {
     rect(x + 2, y + 16, 5, 3, "#16233a");
     rect(x + 19, y + 16, 5, 3, "#16233a");
     // custodian helmet over the hair
-    rect(x + 5, y - 8, 16, 13, "#161e2b");
-    rect(x + 5, y - 8, 5, 13, "#212d40");
-    rect(x + 3, y + 1, 20, 4, "#10161f");
-    rect(x + 11, y - 11, 4, 4, "#212d40");
-    rect(x + 10, y - 3, 8, 7, "#cfa233");
-    rect(x + 12, y - 1, 4, 4, "#f2d97a");
-    rect(x + 13, y, 2, 2, "#8a6a1e");
+    rect(x + 5, hy - 8, 16, 13, "#161e2b");
+    rect(x + 5, hy - 8, 5, 13, "#212d40");
+    rect(x + 3, hy + 1, 20, 4, "#10161f");
+    rect(x + 11, hy - 11, 4, 4, "#212d40");
+    rect(x + 10, hy - 3, 8, 7, "#cfa233");
+    rect(x + 12, hy - 1, 4, 4, "#f2d97a");
+    rect(x + 13, hy, 2, 2, "#8a6a1e");
     return;
   }
   if (role === "council") {
@@ -7318,11 +7434,11 @@ function drawNpcRoleKit(p, role, style) {
   }
   if (role === "book") {
     // round glasses
-    rect(x + 7, y + 8, 4, 4, ink);
-    rect(x + 8, y + 9, 2, 2, "#cfe3f0");
-    rect(x + 15, y + 8, 4, 4, ink);
-    rect(x + 16, y + 9, 2, 2, "#cfe3f0");
-    rect(x + 11, y + 9, 4, 1, ink);
+    rect(x + 7, hy + 8, 4, 4, ink);
+    rect(x + 8, hy + 9, 2, 2, "#cfe3f0");
+    rect(x + 15, hy + 8, 4, 4, ink);
+    rect(x + 16, hy + 9, 2, 2, "#cfe3f0");
+    rect(x + 11, hy + 9, 4, 1, ink);
     // shirt collar (at the neckline, below the chin) + book under the left arm
     rect(x + 8, y + 18, 10, 2, "#7a5a44");
     rect(x - 6, y + 25, 13, 12, "#6f4633");
