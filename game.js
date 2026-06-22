@@ -6477,9 +6477,64 @@ function drawPavingEdges(x, y, top, right, bottom, left, row, col) {
   if (right === "grass") rect(x + T - 2, y, 2, T, shade);
 }
 
+// Seamless grey cobblestone road tiles, built once into a few 32x32 variant canvases and
+// drawn per road tile (picked by world position). Packed rounded pebbles over dark mortar in
+// a grey palette; pebbles near an edge are also drawn wrapped to the opposite side so tiles
+// join with no seam, and using several variants stops any repeating-grid read. Matches the
+// reference cobble the user provided — no beige, no border line.
+let cobbleTiles = null;
+function buildCobbleTiles() {
+  const T = LOGICAL_TILE; // 32
+  const tones = ["#5b5e54", "#696c62", "#777a70", "#868980", "#969990", "#a6a99e"];
+  const mortar = "#3c3f38";
+  const out = [];
+  for (let v = 0; v < 6; v += 1) {
+    const cv = document.createElement("canvas");
+    cv.width = T; cv.height = T;
+    const c = cv.getContext("2d");
+    c.fillStyle = mortar; c.fillRect(0, 0, T, T);
+    let s = (v * 2654435761 + 40503) >>> 0;
+    const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+    const drawPeb = (px, py, r, tone) => {
+      c.fillStyle = "#2c2e29"; // mortar shadow under the stone (lower-right)
+      c.beginPath(); c.ellipse(px + 0.6, py + 0.8, r + 0.9, r + 0.7, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = tone;
+      c.beginPath(); c.ellipse(px, py, r, r * 0.92, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = shadeHex(tone, 20); // top-left lit face
+      c.beginPath(); c.ellipse(px - r * 0.28, py - r * 0.34, r * 0.5, r * 0.42, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = shadeHex(tone, 38);
+      c.fillRect(Math.round(px - r * 0.4), Math.round(py - r * 0.5), 1, 1); // tiny specular fleck
+    };
+    const pebbles = [];
+    const step = 5.3;
+    for (let gy = 0; gy * step < T + step; gy += 1) {
+      for (let gx = 0; gx * step < T + step; gx += 1) {
+        const px = gx * step + 1.4 + (rnd() * 3 - 1.5) + ((gy % 2) ? step * 0.5 : 0);
+        const py = gy * step + 1.4 + (rnd() * 3 - 1.5);
+        const r = 2.3 + rnd() * 1.7;
+        const tone = tones[Math.floor(rnd() * tones.length)];
+        pebbles.push([px, py, r, tone]);
+      }
+    }
+    pebbles.forEach(([px, py, r, tone]) => {
+      drawPeb(px, py, r, tone);
+      const wx = px < r ? T : px > T - r ? -T : 0;
+      const wy = py < r ? T : py > T - r ? -T : 0;
+      if (wx) drawPeb(px + wx, py, r, tone);
+      if (wy) drawPeb(px, py + wy, r, tone);
+      if (wx && wy) drawPeb(px + wx, py + wy, r, tone);
+    });
+    out.push(cv);
+  }
+  return out;
+}
+
 function drawTile(ch, x, y, row = 0, col = 0, map = currentMap()) {
   const kind = tileKind(ch);
-  if (drawTileAsset(kind, x, y)) {
+  // Road renders from the clean procedural cobble below (not tile-road.png): the PNG has a
+  // lighter per-tile border that tiles into a visible grid, which read as an uneven/"lopsided"
+  // surface. The procedural cobble is seam-free and even. Other kinds still use their PNGs.
+  if (kind !== "road" && drawTileAsset(kind, x, y)) {
     drawTileVariation(kind, x, y, row, col);
     drawTileEdges(kind, x, y, row, col, map);
     if (ch === "T") drawTreeTile(x, y);
@@ -6515,18 +6570,21 @@ function drawTile(ch, x, y, row = 0, col = 0, map = currentMap()) {
     return;
   }
   if (ch === "," || ch === ":") {
-    const base = ch === "," ? (visual.road || "#a8a79d") : "#8f9290";
-    rect(x, y, LOGICAL_TILE, LOGICAL_TILE, base);
-    rect(x, y + 20, LOGICAL_TILE, 12, "rgba(40, 34, 30, .12)");
-    for (let sx = x + 2; sx < x + LOGICAL_TILE; sx += 11) {
-      rect(sx, y + 3, 8, 2, "rgba(255,255,255,.14)");
-      rect(sx + 2, y + 17, 7, 2, "rgba(60,50,45,.18)");
-      rect(sx - 3, y + 29, 9, 2, "rgba(255,255,255,.10)");
-    }
-    if (ch === ":") {
-      rect(x + 2, y + 2, LOGICAL_TILE - 4, LOGICAL_TILE - 4, "rgba(245,240,223,.09)");
-      rect(x + 4, y + 15, LOGICAL_TILE - 8, 2, "rgba(40,35,35,.18)");
-    }
+    // Grey cobblestone road/path: seamless pre-rendered variants (no grid, no beige). Variant
+    // + mirror chosen by a scattered hash of the world position so neighbours differ (no row
+    // banding); the 6 variants x 4 flips give 24 combos. Plaza ":" gets a faint lighten.
+    if (!cobbleTiles) cobbleTiles = buildCobbleTiles();
+    const idx = Math.floor(hashNoise(col, row, 7) * cobbleTiles.length) % cobbleTiles.length;
+    const flipX = hashNoise(col, row, 8) > 0.5;
+    const flipY = hashNoise(row, col, 9) > 0.5;
+    const T = LOGICAL_TILE;
+    ctx.save();
+    ctx.translate(x + (flipX ? T : 0), y + (flipY ? T : 0));
+    ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+    ctx.drawImage(cobbleTiles[idx], 0, 0);
+    ctx.restore();
+    if (ch === ":") rect(x, y, T, T, "rgba(232,236,240,.08)");
+    drawTileEdges(kind, x, y, row, col, map);
     return;
   }
   rect(x, y, LOGICAL_TILE, LOGICAL_TILE, visual.sky || "#63a858");
@@ -8853,22 +8911,9 @@ function drawProp(prop) {
 }
 
 function drawStonePlaza() {
-  if (state.currentLocation !== "village") return;
-  const visual = locColors();
-  for (let y = 192; y < 352; y += 16) {
-    for (let x = 32; x < 704; x += 32) {
-      const offset = (y / 16) % 2 ? 16 : 0;
-      if ("#~T".includes(tileAtPixel(x + offset + 15, y + 7))) continue;
-      rect(x + offset, y, 30, 14, visual.road || "#a8a79d");
-      rect(x + offset, y + 12, 30, 2, "#7d8078");
-      rect(x + offset + 28, y + 2, 2, 10, "#888b82");
-      if (hashNoise(x, y, 11) > .72) rect(x + offset + 7, y + 6, 12, 2, "#8a8178");
-    }
-  }
-  for (let x = 704; x < 850; x += 36) {
-    rect(x, 306, 26, 14, "rgba(245,240,223,.18)");
-    rect(x + 2, 318, 22, 2, "rgba(75,85,70,.18)");
-  }
+  // The village road band is now drawn as seamless grey cobblestone by the ground layer, so
+  // the old brick-paver overlay here is gone (it only covered the left two-thirds, which made
+  // the road look lopsided / half-paved). Kept as a no-op so drawPathLayer stays stable.
 }
 
 function drawBoat(x, y) {
