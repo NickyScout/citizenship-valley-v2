@@ -8690,6 +8690,29 @@ function drawInteriorPlaque(theme) {
   ctx.fillText(label, 480, y + 13);
 }
 
+// Shared 2.5D wooden table/desk used across building interiors. Replaces the old flat
+// two-tone rectangle + two thin legs (which read as an undefined brown blob) with a defined
+// piece: lit top surface with an overhang, a shaded apron/front panel, two solid legs with a
+// lit/shaded face, a grain line and a soft contact shadow. Top-left light matches the rest.
+function drawWoodTable(x, y, w) {
+  const base = "#8f5b3f", lt = "#b77752", spec = "#c98a60", apron = "#5c3a2a", legDk = "#43291d", legLt = "#5c3a2a";
+  const topH = 6, apronH = 8, legH = 14;
+  const footY = y + topH + apronH + legH;
+  rect(x + 4, footY - 2, w - 8, 4, "rgba(0,0,0,.22)");      // contact shadow
+  [x + 5, x + w - 10].forEach((lx) => {                     // legs
+    rect(lx, y + topH + apronH, 5, legH, legDk);
+    rect(lx, y + topH + apronH, 2, legH, legLt);
+  });
+  rect(x + 2, y + topH, w - 4, apronH, apron);              // apron (shaded front panel)
+  rect(x + 2, y + topH, w - 4, 1, "#4a2f22");
+  rect(x, y, w, topH, base);                                // top surface
+  rect(x, y, w, 2, spec);                                   // lit top edge
+  rect(x, y, 2, topH, lt);                                  // lit left edge
+  rect(x + w - 2, y, 2, topH, apron);                       // shaded right edge
+  rect(x, y + topH - 1, w, 1, "#3a2418");                   // front lip shadow
+  rect(x + 6, y + 2, w - 12, 1, shadeHex(base, 10));        // grain
+}
+
 function drawCouncilInterior() {
   rect(252, 68, 456, 26, "#5a3f2c");
   rect(280, 86, 400, 8, "#e6d3a4");
@@ -8698,10 +8721,7 @@ function drawCouncilInterior() {
   rect(148, 248, 664, 6, "#d7d0c3");
   rect(200, 420, 560, 5, "#7d8078");
   for (let x = 208; x < 752; x += 74) {
-    rect(x, 282, 42, 14, "#8f5b3f");
-    rect(x + 4, 296, 34, 12, "#b77752");
-    rect(x + 8, 308, 4, 16, "#4b3128");
-    rect(x + 30, 308, 4, 16, "#4b3128");
+    drawWoodTable(x, 282, 42);
   }
   rect(182, 96, 34, 48, "#466d9f");
   rect(182, 96, 6, 48, "#f5f0df");
@@ -8723,10 +8743,7 @@ function drawLibraryInterior() {
     }
   }
   for (let x = 236; x < 700; x += 182) {
-    rect(x, 238, 118, 14, "#8f5b3f");
-    rect(x + 8, 252, 102, 10, "#c18455");
-    rect(x + 14, 262, 6, 18, "#4b3128");
-    rect(x + 92, 262, 6, 18, "#4b3128");
+    drawWoodTable(x, 238, 118);
     rect(x + 42, 218, 26, 20, "#f5f0df");
     rect(x + 50, 224, 10, 8, "#5da9e9");
   }
@@ -8742,10 +8759,8 @@ function drawCourtInterior() {
   rect(360, 130, 240, 26, "#5b3b31");
   rect(388, 156, 184, 22, "#8f5b3f");
   rect(392, 452, 180, 24, "#5b3b31");
-  rect(168, 320, 120, 18, "#8f5b3f");
-  rect(170, 338, 116, 8, "#b77752");
-  rect(648, 320, 120, 18, "#8f5b3f");
-  rect(650, 338, 116, 8, "#b77752");
+  drawWoodTable(168, 320, 120);
+  drawWoodTable(648, 320, 120);
   rect(448, 96, 64, 24, "#d7d0c3");
   rect(478, 98, 4, 20, "#f2c14e");
   rect(458, 104, 44, 4, "#f2c14e");
@@ -8769,10 +8784,7 @@ function drawGardenInterior() {
   rect(696, 246, 78, 8, "#466d9f");
   rect(702, 264, 64, 4, "#4d2c2b");
   for (let x = 234; x < 716; x += 144) {
-    rect(x, 352, 34, 18, "#8f5b3f");
-    rect(x + 4, 370, 26, 12, "#b77752");
-    rect(x + 8, 382, 4, 12, "#4b3128");
-    rect(x + 22, 382, 4, 12, "#4b3128");
+    drawWoodTable(x, 352, 34);
   }
 }
 
