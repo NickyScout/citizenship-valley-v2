@@ -10224,71 +10224,117 @@ function drawRegionPet() {
   ctx.restore();
 }
 
+// --- Region pets: defined pixel-art (drawn facing RIGHT; drawRegionPet mirrors for left).
+// Each fits roughly a 24x20 box anchored at (0,0). Outline #1b232c, top-left light, soft
+// belly shade, clear head/ear/tail/leg shapes + a little walk bob on the legs (step 0/1).
+
 function drawPetDog(step) {
-  const body = "#9a6a44", dk = "#6f4a30", lt = "#c08a58", ear = "#5b3b2c";
-  const a = step ? 1 : 0;
-  rect(5, 13, 3, 5 - a, dk);
-  rect(13, 13, 3, 5 - (1 - a) * 0, dk);
-  rect(3, 7, 16, 7, body);
-  rect(3, 7, 16, 1, lt);
-  rect(3, 12, 16, 2, dk);
-  rect(0, 4, 4, 4, body);
-  rect(17, 5, 6, 7, body);
-  rect(22, 8, 2, 3, body);
-  rect(16, 3, 4, 4, ear);
-  rect(23, 8, 1, 2, "#2d2521");
-  rect(20, 7, 1, 1, "#1b232c");
+  const ink = "#1b232c";
+  const base = "#a9774c", lt = "#c79a6a", dk = "#7c5435", ear = "#5e3f29", nose = "#2d2521";
+  const fl = step ? 1 : 0, bl = step ? 0 : 1; // alternating legs
+  // tail (up, waggy)
+  rect(1, 5, 2, 4, ink); rect(0, 3, 3, 3, base); rect(0, 3, 2, 1, lt);
+  // back legs / front legs
+  rect(4, 14, 3, 4 - fl, ink); rect(4, 15, 2, 3 - fl, dk);
+  rect(9, 14, 3, 4 - bl, ink); rect(9, 15, 2, 3 - bl, dk);
+  rect(14, 14, 3, 4 - fl, ink); rect(14, 15, 2, 3 - fl, dk);
+  // body
+  rect(3, 6, 15, 9, ink);
+  rect(4, 7, 13, 7, base);
+  rect(4, 7, 13, 2, lt);          // lit back
+  rect(4, 12, 13, 2, dk);         // belly shade
+  rect(7, 9, 5, 1, "rgba(255,255,255,.18)");
+  // head (right side)
+  rect(15, 3, 9, 10, ink);
+  rect(16, 4, 7, 8, base);
+  rect(16, 4, 7, 2, lt);
+  rect(15, 2, 4, 4, ink); rect(16, 3, 2, 3, ear);   // ear
+  rect(22, 9, 3, 3, ink); rect(22, 9, 2, 2, base);  // snout
+  rect(23, 10, 1, 1, nose);                          // nose
+  rect(20, 6, 2, 2, ink); rect(20, 6, 1, 1, "#f5f0df"); rect(21, 7, 1, 1, ink); // eye
 }
 
 function drawPetCat(step) {
-  const body = "#8f8a82", dk = "#5f5a52", lt = "#b3aea4";
-  const a = step ? 1 : 0;
-  rect(5, 13, 2, 5 - a, dk);
-  rect(13, 13, 2, 5 - (1 - a), dk);
-  rect(3, 8, 15, 6, body);
-  rect(3, 8, 15, 1, lt);
-  rect(6, 9, 1, 5, dk);
-  rect(10, 9, 1, 5, dk);
-  rect(0, 5, 3, 9, body);
-  rect(0, 4, 4, 3, body);
-  rect(16, 6, 6, 6, body);
-  rect(16, 3, 2, 3, dk);
-  rect(20, 3, 2, 3, dk);
-  rect(19, 8, 1, 1, "#6fbf73");
-  rect(22, 9, 1, 1, "#2d2521");
+  const ink = "#1b232c";
+  const base = "#9a958c", lt = "#bdb8ae", dk = "#6c675f", stripe = "#6f6a62", nose = "#d98a8a";
+  const fl = step ? 1 : 0, bl = step ? 0 : 1;
+  // curled tail up at the back
+  rect(0, 4, 2, 8, ink); rect(0, 4, 2, 7, base); rect(0, 4, 1, 4, lt); rect(0, 3, 4, 2, base);
+  // legs
+  rect(5, 14, 2, 4 - fl, ink); rect(5, 15, 1, 3 - fl, dk);
+  rect(9, 14, 2, 4 - bl, ink); rect(9, 15, 1, 3 - bl, dk);
+  rect(13, 14, 2, 4 - fl, ink); rect(13, 15, 1, 3 - fl, dk);
+  // body (slimmer than dog)
+  rect(3, 7, 14, 8, ink);
+  rect(4, 8, 12, 6, base);
+  rect(4, 8, 12, 2, lt);
+  rect(4, 12, 12, 2, dk);
+  rect(7, 9, 1, 4, stripe); rect(10, 9, 1, 4, stripe); rect(13, 9, 1, 4, stripe); // tabby stripes
+  // head with pointed ears
+  rect(15, 4, 8, 9, ink);
+  rect(16, 5, 6, 7, base);
+  rect(16, 5, 6, 2, lt);
+  rect(15, 1, 3, 4, ink); rect(16, 2, 1, 2, dk);   // left ear
+  rect(20, 1, 3, 4, ink); rect(21, 2, 1, 2, dk);   // right ear
+  rect(19, 8, 2, 2, ink); rect(19, 8, 1, 1, "#9be36f"); rect(20, 9, 1, 1, ink); // eye (green)
+  rect(21, 10, 2, 1, nose);  // nose/muzzle
+  rect(17, 10, 4, 1, "rgba(255,255,255,.25)"); // whisker hint
 }
 
 function drawPetDuck(step) {
-  const body = "#eef0ec", dk = "#cbcec6", beak = "#f2b24a";
-  const a = step ? 1 : 0;
-  rect(8, 14, 2, 3 - a, beak);
-  rect(12, 14, 2, 2 + a, beak);
-  rect(4, 8, 12, 7, body);
-  rect(4, 8, 12, 1, "#ffffff");
-  rect(6, 10, 8, 3, dk);
-  rect(2, 7, 4, 3, body);
-  rect(14, 3, 5, 7, body);
-  rect(18, 6, 4, 3, beak);
-  rect(16, 5, 1, 1, "#2d2521");
+  const ink = "#1b232c";
+  const base = "#f3f4ef", lt = "#ffffff", dk = "#c9ccc4", beak = "#f2a93a", beakDk = "#cf8a22", foot = "#f2a93a";
+  const fl = step ? 1 : 0, bl = step ? 0 : 1;
+  // webbed feet
+  rect(6, 15, 3, 2 + fl, ink); rect(6, 15, 3, 1, foot);
+  rect(11, 15, 3, 2 + bl, ink); rect(11, 15, 3, 1, foot);
+  // tail tuft
+  rect(1, 7, 3, 3, ink); rect(1, 7, 3, 1, lt);
+  // plump body
+  rect(3, 7, 13, 9, ink);
+  rect(4, 8, 11, 7, base);
+  rect(4, 8, 11, 2, lt);
+  rect(4, 13, 11, 2, dk);          // under-belly shade
+  rect(6, 10, 6, 1, "rgba(0,0,0,.06)"); // wing fold line
+  rect(10, 9, 5, 5, dk);           // folded wing
+  rect(10, 9, 5, 1, base);
+  // head + neck up at the front
+  rect(14, 1, 7, 9, ink);
+  rect(15, 2, 5, 7, base);
+  rect(15, 2, 5, 2, lt);
+  rect(17, 4, 2, 2, ink); rect(17, 4, 1, 1, "#f5f0df"); rect(18, 5, 1, 1, ink); // eye
+  // bill pointing right
+  rect(19, 5, 5, 3, ink); rect(19, 5, 4, 2, beak); rect(19, 7, 4, 1, beakDk);
 }
 
 function drawPetOwl(step) {
-  const body = "#8a6a4a", dk = "#5b4530", face = "#d8c4a0", beak = "#f2a13a";
-  const a = step ? 1 : 0;
-  rect(7, 16, 2, 2 - a, beak);
-  rect(11, 16, 2, 1 + a, beak);
-  rect(4, 6, 2, 9, dk);
-  rect(14, 6, 2, 9, dk);
-  rect(5, 5, 10, 12, body);
-  rect(5, 3, 3, 3, dk);
-  rect(12, 3, 3, 3, dk);
-  rect(6, 6, 8, 7, face);
-  rect(6, 13, 8, 3, "#b08a5a");
-  rect(7, 7, 3, 3, "#f5f0df");
-  rect(11, 7, 3, 3, "#f5f0df");
-  rect(8, 8, 1, 1, "#1b232c");
-  rect(12, 8, 1, 1, "#1b232c");
-  rect(9, 10, 2, 2, beak);
+  const ink = "#1b232c";
+  const base = "#9a744d", dk = "#6e5031", face = "#e0caa2", beak = "#f2a93a";
+  const lt2 = "#b89160";
+  const fl = step ? 1 : 0;
+  // talons
+  rect(7, 16, 2, 2 - fl, beak); rect(11, 16, 2, 1 + fl, beak);
+  // body (upright egg shape)
+  rect(4, 4, 14, 13, ink);
+  rect(5, 5, 12, 11, base);
+  rect(5, 5, 12, 2, lt2);
+  rect(5, 13, 12, 3, dk);          // lower body shade
+  // wing edges
+  rect(4, 6, 2, 9, dk); rect(16, 6, 2, 9, dk);
+  // chest speckles
+  rect(8, 11, 1, 1, dk); rect(11, 12, 1, 1, dk); rect(10, 9, 1, 1, dk);
+  // ear tufts
+  rect(5, 2, 3, 3, ink); rect(6, 3, 1, 2, dk);
+  rect(14, 2, 3, 3, ink); rect(15, 3, 1, 2, dk);
+  // facial disc
+  rect(6, 5, 10, 8, ink);
+  rect(7, 6, 8, 6, face);
+  rect(7, 6, 8, 1, "#f1e3c4");
+  // big eyes
+  rect(7, 7, 3, 3, "#f5f0df"); rect(8, 8, 2, 2, ink); rect(8, 8, 1, 1, "#3a4a6a");
+  rect(12, 7, 3, 3, "#f5f0df"); rect(13, 8, 2, 2, ink); rect(13, 8, 1, 1, "#3a4a6a");
+  // beak
+  rect(10, 10, 2, 3, ink); rect(10, 10, 2, 2, beak);
 }
 
 function drawCharacterLayer() {
