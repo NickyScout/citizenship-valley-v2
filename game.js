@@ -8528,34 +8528,115 @@ function drawStudyStations() {
   if (!isInteriorLocation()) return;
   currentStudyStations().forEach((station) => {
     const done = state.completedStudyStations.has(studyStationKey(state.currentLocation, station.id));
-    const accent = done ? "#6fbf73" : station.accent;
-    rect(station.x - 16, station.y + 22, 64, 10, "rgba(0,0,0,.22)");
-    rect(station.x - 8, station.y + 8, 48, 18, accent);
-    rect(station.x - 4, station.y + 10, 40, 14, "#1d2427");
-    rect(station.x + 4, station.y - 10, 24, 10, accent);
-    rect(station.x + 10, station.y - 22, 12, 12, "#f5f0df");
-    rect(station.x + 8, station.y + 26, 5, 12, "#5b3b31");
-    rect(station.x + 19, station.y + 26, 5, 12, "#5b3b31");
-    if (station.id.includes("source") || station.id.includes("revision") || station.id.includes("flashcard") || station.id.includes("misinformation")) {
-      rect(station.x + 5, station.y + 13, 8, 8, "#f5f0df");
-      rect(station.x + 14, station.y + 13, 8, 8, "#5da9e9");
-      rect(station.x + 23, station.y + 13, 8, 8, "#f2c14e");
-    } else if (station.id.includes("trial") || station.id.includes("rights") || station.id.includes("verdict") || station.id.includes("mistakes")) {
-      rect(station.x + 8, station.y + 13, 20, 4, "#d7d0c3");
-      rect(station.x + 16, station.y + 9, 4, 16, "#f2c14e");
-    } else if (station.id.includes("campaign") || station.id.includes("impact") || station.id.includes("notice") || station.id.includes("reflection")) {
-      rect(station.x + 8, station.y + 11, 4, 14, "#4b3128");
-      rect(station.x + 12, station.y + 11, 18, 10, "#e36b5d");
-      rect(station.x + 15, station.y + 14, 11, 2, "#f5f0df");
-    } else {
-      rect(station.x + 9, station.y + 12, 18, 10, "#d8a23a");
-      rect(station.x + 15, station.y + 9, 6, 16, "#5a3f2c");
-    }
-    ctx.fillStyle = "#f5f0df";
-    ctx.font = "10px Georgia";
-    ctx.textAlign = "center";
-    ctx.fillText(station.label, station.x + 12, station.y + 52);
+    drawStudyKiosk(station, done);
   });
+}
+
+// A defined 2.5D revision kiosk (replaces the old flat blob): stone base plate, a wood pedestal
+// column with lit/shaded faces, and a framed angled screen with a coloured bezel + a type-specific
+// motif inside. Anchor unchanged (centre ~station.x+12), so the interaction zone is the same.
+function drawStudyKiosk(station, done) {
+  const x = station.x, y = station.y;
+  const cx = x + 12;                       // kiosk centre (matches old label anchor)
+  const accent = done ? "#6fbf73" : station.accent;
+  const accLt = shadeHex(accent, 22), accDk = shadeHex(accent, -26);
+  const wood = "#8f5b3f", woodLt = "#b77752", woodDk = "#5c3a2a";
+  const stone = "#8a8f93", stoneLt = "#b0b4b7", stoneDk = "#5c6166";
+  const ink = "#1b232c";
+
+  // ground contact shadow
+  drawCastShadow(cx, y + 34, 18, OBJECT_HEIGHTS.prop, 0.9);
+
+  // --- base plate (stone) ---
+  rect(cx - 16, y + 30, 32, 8, ink);
+  rect(cx - 15, y + 30, 30, 6, stone);
+  rect(cx - 15, y + 30, 30, 2, stoneLt);
+  rect(cx - 15, y + 34, 30, 2, stoneDk);
+
+  // --- pedestal column (wood, lit left / shaded right) ---
+  rect(cx - 8, y + 14, 16, 18, ink);
+  rect(cx - 7, y + 15, 14, 16, wood);
+  rect(cx - 7, y + 15, 4, 16, woodLt);
+  rect(cx + 3, y + 15, 4, 16, woodDk);
+  rect(cx - 1, y + 18, 1, 12, "#5a3b28");   // grain line
+  rect(cx - 9, y + 13, 18, 2, woodDk);      // column cap shadow under screen
+
+  // --- screen housing (framed, slight overhang) ---
+  rect(cx - 18, y - 12, 36, 28, ink);       // outer frame
+  rect(cx - 17, y - 11, 34, 26, "#2b333b"); // bezel body
+  rect(cx - 17, y - 11, 34, 2, "#3c4650");  // bezel top light
+  rect(cx - 17, y + 13, 34, 2, "#141a20");  // bezel bottom shade
+  // coloured header strip
+  rect(cx - 17, y - 11, 34, 5, accent);
+  rect(cx - 17, y - 11, 34, 1, accLt);
+  rect(cx - 17, y - 7, 34, 1, accDk);
+  // the screen itself (inset)
+  rect(cx - 14, y - 4, 28, 16, "#101622");
+  rect(cx - 14, y - 4, 28, 1, "#1d2a3a");   // screen top sheen
+  rect(cx - 14, y - 4, 1, 16, "#1d2a3a");
+
+  // --- type-specific motif inside the screen ---
+  drawStudyMotif(station, cx, y, accent);
+
+  // done tick or a soft glow corner
+  if (done) {
+    rect(cx + 9, y - 9, 6, 6, "#1d2427");
+    rect(cx + 10, y - 7, 1, 2, "#6fbf73");
+    rect(cx + 11, y - 6, 1, 2, "#6fbf73");
+    rect(cx + 12, y - 8, 1, 3, "#6fbf73");
+  } else {
+    rect(cx + 12, y - 9, 2, 2, accLt);      // little indicator LED
+  }
+
+  // label
+  ctx.fillStyle = "#f5f0df";
+  ctx.font = "10px Georgia";
+  ctx.textAlign = "center";
+  ctx.fillText(station.label, cx, y + 52);
+}
+
+// Crisp little icons drawn inside the kiosk screen (28x16 area centred on cx, from y-4).
+function drawStudyMotif(station, cx, y, accent) {
+  const id = station.id;
+  const paper = "#f5f0df", blue = "#5da9e9", gold = "#f2c14e", red = "#e36b5d", green = "#6fbf73";
+  if (id.includes("source") || id.includes("revision") || id.includes("flashcard") || id.includes("misinformation")) {
+    // three revision cards with borders
+    [[-12, paper], [-2, blue], [8, gold]].forEach(([dx, col]) => {
+      rect(cx + dx, y, 9, 11, "#0b0f17");
+      rect(cx + dx + 1, y + 1, 7, 9, col);
+      rect(cx + dx + 1, y + 1, 7, 1, "rgba(255,255,255,.5)");
+      rect(cx + dx + 2, y + 4, 5, 1, "rgba(0,0,0,.3)");
+      rect(cx + dx + 2, y + 6, 4, 1, "rgba(0,0,0,.25)");
+    });
+  } else if (id.includes("trial") || id.includes("rights") || id.includes("verdict") || id.includes("mistakes")) {
+    // scales of justice
+    rect(cx - 1, y, 2, 12, gold);              // post
+    rect(cx - 9, y + 1, 18, 1, gold);          // beam
+    rect(cx - 9, y + 1, 1, 4, "#caa64a");      // left chain
+    rect(cx + 8, y + 1, 1, 4, "#caa64a");      // right chain
+    rect(cx - 12, y + 5, 7, 3, "#d7d0c3");     // left pan
+    rect(cx + 5, y + 5, 7, 3, "#d7d0c3");      // right pan
+    rect(cx - 4, y + 11, 8, 2, "#caa64a");     // base
+  } else if (id.includes("campaign") || id.includes("impact") || id.includes("notice") || id.includes("reflection")) {
+    // poster on a board
+    rect(cx - 9, y, 18, 13, "#0b0f17");
+    rect(cx - 8, y + 1, 16, 11, red);
+    rect(cx - 8, y + 1, 16, 1, shadeHex(red, 24));
+    rect(cx - 5, y + 3, 10, 2, paper);         // headline
+    rect(cx - 5, y + 7, 7, 1, "rgba(255,255,255,.7)");
+    rect(cx - 5, y + 9, 9, 1, "rgba(255,255,255,.6)");
+  } else {
+    // open book / ledger
+    rect(cx - 11, y + 1, 11, 11, "#0b0f17");
+    rect(cx, y + 1, 11, 11, "#0b0f17");
+    rect(cx - 10, y + 2, 9, 9, paper);
+    rect(cx + 1, y + 2, 9, 9, "#e7dcc4");
+    rect(cx - 1, y + 1, 2, 11, gold);          // spine
+    rect(cx - 8, y + 4, 5, 1, "#9a8f78");
+    rect(cx - 8, y + 6, 5, 1, "#9a8f78");
+    rect(cx + 3, y + 4, 5, 1, "#9a8f78");
+    rect(cx + 3, y + 6, 5, 1, "#9a8f78");
+  }
 }
 
 function drawInteriorExit() {
