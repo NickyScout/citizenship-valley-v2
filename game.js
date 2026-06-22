@@ -6529,8 +6529,105 @@ function buildCobbleTiles() {
   return out;
 }
 
+// --- Stage 1 interiors: indoor floor / rug / wall theming -------------------------------
+// Building interiors reuse studyInteriorMap (": " floor, "," rug aisles, "#" wall). Outdoors
+// those chars map to plaza pavers / cobble road / exterior stone, which read as an outdoor
+// courtyard. When inside, route them to indoor art instead (wood/marble floor, a themed
+// carpet runner, and a wainscoted plaster wall) — purely visual; maps/collisions/stations
+// and exits are unchanged. Per-room accent keyed by the interior id.
+const INTERIOR_THEMES = {
+  townHallInterior: { floor: "wood", wall: "#d9cdb2", rug: { inner: "#a8423d", border: "#6f2622", weave: "#e7c25a" } },
+  libraryInterior: { floor: "wood", wall: "#d4cfbe", rug: { inner: "#2f6f69", border: "#1d4a46", weave: "#dcc888" } },
+  courtInterior: { floor: "marble", wall: "#d2d4cf", rug: { inner: "#75324c", border: "#4a1f31", weave: "#d8b25a" } },
+  parkInterior: { floor: "wood", wall: "#cfd2c2", rug: { inner: "#3f7d49", border: "#28552f", weave: "#e1d49a" } }
+};
+function interiorTheme() {
+  return INTERIOR_THEMES[state.currentLocation] || INTERIOR_THEMES.townHallInterior;
+}
+
+function drawInteriorFloor(x, y, row, col, theme) {
+  const T = LOGICAL_TILE;
+  if (theme.floor === "marble") {
+    const base = "#ccd0cb", lt = "#e6e8e3", dk = "#a9b0ab", vein = "#9aa39c";
+    rect(x, y, T, T, base);
+    rect(x, y, T, 1, dk); rect(x, y, 1, T, dk);            // grout at tile edges
+    rect(x + 1, y + 1, T - 1, 1, lt);                      // inner sheen
+    if (hashNoise(col, row, 12) > 0.5) {                   // faint diagonal vein
+      for (let i = 0; i < 10; i += 1) rect(x + 5 + i, y + 6 + i, 1, 1, vein);
+    }
+    rect(x + 3, y + 3, 2, 2, "rgba(255,255,255,.35)");     // gloss highlight
+    return;
+  }
+  // wood plank floor (two horizontal planks per tile, staggered board joints)
+  const base = "#a87c4d", lt = "#c2976a", seam = "#6a4a2c";
+  rect(x, y, T, T, base);
+  rect(x, y, T, 16, shadeHex(base, (row % 2) ? 0 : 7));
+  rect(x, y + 16, T, 16, shadeHex(base, (row % 2) ? 5 : -3));
+  rect(x, y, T, 2, lt);                                    // plank top highlight
+  rect(x, y + 15, T, 1, seam);                             // seam between the two planks
+  rect(x, y + 16, T, 1, shadeHex(lt, -8));
+  rect(x, y + 31, T, 1, seam);                             // seam to next row
+  rect(x + ((col * 13 + row * 7) % T), y, 1, 15, seam);    // staggered end joints
+  rect(x + ((col * 7 + row * 11 + 16) % T), y + 16, 1, 15, seam);
+  if (hashNoise(col, row, 20) > 0.6) {                     // grain fleck
+    rect(x + 4 + Math.floor(hashNoise(row, col, 21) * 20), y + 6, 6, 1, shadeHex(base, -12));
+  }
+}
+
+function drawInteriorRug(x, y, row, col, map, theme) {
+  const T = LOGICAL_TILE;
+  const r = theme.rug;
+  const isRug = (rr, cc) => tileAtMap(map, rr, cc) === ",";
+  const up = isRug(row - 1, col), dn = isRug(row + 1, col), lf = isRug(row, col - 1), rt = isRug(row, col + 1);
+  rect(x, y, T, T, r.inner);
+  for (let i = 0; i < 5; i += 1) {                         // subtle woven speckle
+    const px = x + 3 + Math.floor(hashNoise(col * 3 + i, row * 5 + i, 30) * (T - 6));
+    const py = y + 3 + Math.floor(hashNoise(row * 3 + i, col * 5 + i, 31) * (T - 6));
+    rect(px, py, 2, 2, hashNoise(col + i, row + i, 32) > 0.5 ? shadeHex(r.inner, 8) : shadeHex(r.inner, -10));
+  }
+  const b = r.border, g = r.weave;                         // border + gold trim only on outer edges
+  if (!up) { rect(x, y, T, 3, b); rect(x, y + 4, T, 1, g); }
+  if (!dn) { rect(x, y + T - 3, T, 3, b); rect(x, y + T - 5, T, 1, g); }
+  if (!lf) { rect(x, y, 3, T, b); rect(x + 4, y, 1, T, g); }
+  if (!rt) { rect(x + T - 3, y, 3, T, b); rect(x + T - 5, y, 1, T, g); }
+}
+
+function drawInteriorWall(x, y, row, col, map, theme) {
+  const T = LOGICAL_TILE;
+  const plaster = theme.wall || "#d8cdb6";
+  const plLt = shadeHex(plaster, 16), plDk = shadeHex(plaster, -16);
+  const wood = "#8f5b3f", woodLt = "#b77752", woodDk = "#5c3a2a";
+  rect(x, y, T, T, plaster);
+  rect(x, y, T, 3, plLt);                                  // top light (from top-left)
+  rect(x, y, 3, T, shadeHex(plaster, 8));
+  rect(x + T - 3, y, 3, T, plDk);                          // right shade
+  rect(x + 16, y, 1, T, "rgba(120,96,70,.10)");            // faint panel seam
+  const floorAt = (rr, cc) => { const c = tileAtMap(map, rr, cc); return c === ":" || c === ","; };
+  // wood wainscot on the room-facing side of each wall (orientation-aware)
+  if (floorAt(row + 1, col)) { // top wall (room below): skirting + dado at the base
+    rect(x, y + T - 7, T, 7, wood); rect(x, y + T - 7, T, 1, woodLt); rect(x, y + T - 1, T, 1, woodDk);
+    rect(x, y + T - 15, T, 2, wood); rect(x, y + T - 15, T, 1, woodLt);
+  }
+  if (floorAt(row - 1, col)) { // bottom wall (room above): skirting at the top
+    rect(x, y, T, 7, wood); rect(x, y, T, 1, woodLt); rect(x, y + 6, T, 1, woodDk);
+  }
+  if (floorAt(row, col + 1)) { // left wall (room right): vertical panel on the right
+    rect(x + T - 7, y, 7, T, wood); rect(x + T - 7, y, 1, T, woodLt); rect(x + T - 1, y, 1, T, woodDk);
+  }
+  if (floorAt(row, col - 1)) { // right wall (room left): vertical panel on the left
+    rect(x, y, 7, T, wood); rect(x, y, 1, T, woodLt); rect(x + 6, y, 1, T, woodDk);
+  }
+}
+
 function drawTile(ch, x, y, row = 0, col = 0, map = currentMap()) {
   const kind = tileKind(ch);
+  // Indoor theming: floor/rug/wall art instead of the outdoor plaza/road/stone tiles.
+  if (isInteriorLocation()) {
+    const theme = interiorTheme();
+    if (ch === "#") { drawInteriorWall(x, y, row, col, map, theme); return; }
+    if (ch === ":") { drawInteriorFloor(x, y, row, col, theme); return; }
+    if (ch === ",") { drawInteriorFloor(x, y, row, col, theme); drawInteriorRug(x, y, row, col, map, theme); return; }
+  }
   // Road is handled by the ","/":" block below (a windowed draw of the large seamless
   // tile-road.png, not the standard squish-to-tile path), so skip drawTileAsset for it.
   if (kind !== "road" && drawTileAsset(kind, x, y)) {
