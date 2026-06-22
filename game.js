@@ -6570,15 +6570,17 @@ function drawTile(ch, x, y, row = 0, col = 0, map = currentMap()) {
   }
   if (ch === "," || ch === ":") {
     // Grey cobblestone road/path. The road art (tile-road.png) is a large seamless texture;
-    // we draw a 32px WINDOW of it per tile keyed to world position, so the stones stay chunky
-    // and the repeat is spread over many tiles (no per-tile grid, no detail-crushing rescale).
+    // we sample a ROAD_SRC-px WINDOW of it per tile and shrink it into the 32px tile, so the
+    // cobbles read smaller (not "boulders") while the repeat is still spread over many tiles
+    // (no per-tile grid). ROAD_SRC divides the 384px texture so the window wraps seamlessly.
     // Falls back to the procedural cobble variants until the PNG has decoded.
     const roadImg = getAssetImage(TILE_ASSETS.road);
     if (roadImg && roadImg.complete && roadImg.naturalWidth) {
+      const ROAD_SRC = 48; // source window px shrunk into LOGICAL_TILE (48->32 = ~33% smaller stones)
       const tw = roadImg.naturalWidth, th = roadImg.naturalHeight;
-      const sx = ((col * LOGICAL_TILE) % tw + tw) % tw;
-      const sy = ((row * LOGICAL_TILE) % th + th) % th;
-      ctx.drawImage(roadImg, sx, sy, LOGICAL_TILE, LOGICAL_TILE, x, y, LOGICAL_TILE, LOGICAL_TILE);
+      const sx = ((col * ROAD_SRC) % tw + tw) % tw;
+      const sy = ((row * ROAD_SRC) % th + th) % th;
+      ctx.drawImage(roadImg, sx, sy, ROAD_SRC, ROAD_SRC, x, y, LOGICAL_TILE, LOGICAL_TILE);
     } else {
       if (!cobbleTiles) cobbleTiles = buildCobbleTiles();
       const idx = Math.floor(hashNoise(col, row, 7) * cobbleTiles.length) % cobbleTiles.length;
