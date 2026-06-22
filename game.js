@@ -7163,6 +7163,49 @@ function getTintedVillager(skinHex, hairHex, coatHex) {
   return cv;
 }
 
+// Stage 1F variety: an A-line skirt/dress over the villager's lower body for female NPCs, so
+// the crowd reads male/female (not just recoloured). Drawn in the NPC's coat colour with a lit
+// left / shaded right and a hem band; the shoes still peek out below.
+function drawNpcSkirt(p, style) {
+  const cx = p.x + 16;
+  const coat = style.coat, lt = shadeHex(coat, 18), dk = shadeHex(coat, -22);
+  const top = p.y + 27, rows = 13;
+  for (let i = 0; i < rows; i += 1) {
+    const w = 13 + Math.round(i * 0.95); // flare 13 -> ~25
+    const rx = Math.round(cx - w / 2);
+    rect(rx, top + i, w, 1, coat);
+    rect(rx, top + i, Math.max(2, Math.round(w * 0.3)), 1, lt);
+    rect(rx + w - Math.max(2, Math.round(w * 0.22)), top + i, Math.max(2, Math.round(w * 0.22)), 1, dk);
+  }
+  const hemW = 25, hx = Math.round(cx - hemW / 2);
+  rect(hx, top + rows, hemW, 2, dk);
+  rect(cx - 6, top + 2, 1, rows - 3, shadeHex(coat, -10));
+  rect(cx + 5, top + 2, 1, rows - 3, shadeHex(coat, -10));
+}
+
+// Stage 1F variety: a clothing-shape layer for the plain "citizen" NPCs (role NPCs already
+// differ via their kit), so same-colour townsfolk still vary in body, not only hue. `garb`
+// picks apron / waistcoat / plain.
+function drawNpcGarb(p, style) {
+  if (style.role !== "citizen") return;
+  const x = p.x, coat = style.coat;
+  if (style.garb === 1) {
+    // apron: lighter front panel + bib over the lower torso
+    const ap = "#e8dcc2", apDk = "#cdbf9f";
+    rect(x + 9, p.y + 22, 14, 16, ap);
+    rect(x + 9, p.y + 22, 14, 1, "#f3ead0");
+    rect(x + 9, p.y + 37, 14, 1, apDk);
+    rect(x + 13, p.y + 19, 6, 3, ap);
+  } else if (style.garb === 2) {
+    // waistcoat: darker vest panels + a button row
+    const v = shadeHex(coat, -26), vl = shadeHex(coat, -10);
+    rect(x + 8, p.y + 20, 16, 18, v);
+    rect(x + 8, p.y + 20, 4, 18, vl);
+    rect(x + 20, p.y + 20, 4, 18, shadeHex(coat, -36));
+    for (let by = p.y + 23; by < p.y + 36; by += 4) rect(x + 15, by, 2, 2, "#e8dcc2");
+  }
+}
+
 // Draw an NPC as the recoloured villager sprite (front/down facing) plus a per-NPC hairstyle
 // overlay (restores bun/ponytail/wrap/coily/beard identity + portrait sync) and its role kit,
 // breathing with the shared idle sway and a subtle per-NPC build. Returns false (procedural
@@ -7185,6 +7228,9 @@ function drawNpcVillagerSprite(person, style) {
   ctx.translate(-cx, -person.y);
   if (sway) ctx.translate(0, -sway);
   ctx.drawImage(sheet, 0, 0, 48, 72, dx, dy, 48, 72); // row 0 (down), frame 0 (standing)
+  // clothing-shape layers under the kit: female skirt silhouette + citizen garb variant.
+  if (style.feminine) drawNpcSkirt(person, style);
+  drawNpcGarb(person, style);
   // hairstyle silhouette over the sprite head (head crown ~person.y-16, face below).
   drawNpcHair({ x: person.x + 2, y: person.y - 15, color: person.color }, style);
   if (style.beard) drawNpcBeard({ x: person.x + 2, y: person.y - 12, color: person.color }, style);
@@ -7828,6 +7874,8 @@ function npcAppearance(person) {
   const hairMeta = NPC_HAIR[portraitId] || { s: "short" };
   const skin = look ? look.skin : base.skin;
   const hair = look ? look.hair : base.hair;
+  const firstName = (person.name || "").split(" ").at(-1);
+  const feminine = FEMALE_NPC_NAMES.has(firstName) || /priya|amina|mira|nia|june|grace|farah|mina|tess|rae|iona/i.test(person.id || "");
   const appearance = {
     ...base,
     skin,
@@ -7837,6 +7885,11 @@ function npcAppearance(person) {
     role: npcRole(person),
     hairstyle: hairMeta.s,
     beard: !!hairMeta.beard,
+    // Female NPCs get a skirt silhouette (male/female read, not just a recolour). `garb`
+    // picks a clothing-shape variant (apron / waistcoat / plain) so same-role same-gender
+    // NPCs still differ in body, not only colour.
+    feminine,
+    garb: Math.floor(hashNoise(person.x, person.y, 21) * 3),
     // Per-NPC idle-animation phase (so the crowd doesn't breathe/blink in sync) and a
     // subtle build (-1 slim / 0 / +1 broad) for silhouette variety. Computed once.
     animPhase: hashNoise(person.x, person.y, 12) * Math.PI * 2,
