@@ -9429,7 +9429,10 @@ function spawnAmbientWalkers() {
       coatLt: shadeHex(coat, 20),
       coatDk: shadeHex(coat, -22),
       skin: skins[Math.floor(hashNoise(seed, 6, 41) * skins.length)],
-      hair: hairs[Math.floor(hashNoise(seed, 7, 41) * hairs.length)]
+      hair: hairs[Math.floor(hashNoise(seed, 7, 41) * hairs.length)],
+      // Stage 1F: gender + build variety so the ambient crowd matches the upgraded NPCs.
+      feminine: hashNoise(seed, 8, 41) < 0.45,
+      build: Math.round(hashNoise(seed, 9, 41) * 2) - 1
     };
     pickWalkerTarget(walker);
     ambientWalkers.push(walker);
@@ -9494,7 +9497,32 @@ function updateAmbientWalkers(dt) {
   });
 }
 
+// Stage 1F: ambient walkers use the same recoloured villager sheet as the interactive NPCs,
+// but with the WALK animation (row by direction, frame by step) since they move. Falls back
+// to the procedural body below until the sheet is ready. Gender (skirt) + build vary the crowd.
+function drawAmbientWalkerSprite(w) {
+  if (!villagerSprite.isReady()) return false;
+  const sheet = getTintedVillager(w.skin, w.hair, w.coat);
+  if (!sheet) return false;
+  const dir = (w.dir === "up" || w.dir === "left" || w.dir === "right") ? w.dir : "down";
+  const row = villagerSprite.rows[dir] || 0;
+  const frame = w.moving ? Math.floor(w.step / 6) % 4 : 0;
+  const dx = Math.round(w.x) - 8;
+  const dy = Math.round(w.y) - 24;
+  const cx = w.x + 16;
+  drawCastShadow(w.x + 12, w.y + 47, 13 + (w.build || 0), OBJECT_HEIGHTS.person);
+  ctx.save();
+  ctx.translate(cx, w.y);
+  ctx.scale(1 + (w.build || 0) * 0.05, 1);
+  ctx.translate(-cx, -w.y);
+  ctx.drawImage(sheet, frame * 48, row * 72, 48, 72, dx, dy, 48, 72);
+  if (w.feminine) drawNpcSkirt(w, { coat: w.coat });
+  ctx.restore();
+  return true;
+}
+
 function drawAmbientWalker(w) {
+  if (drawAmbientWalkerSprite(w)) return;
   const x = Math.round(w.x);
   const y = Math.round(w.y);
   const outline = "#1b232c";
