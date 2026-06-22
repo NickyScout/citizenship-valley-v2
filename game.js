@@ -8371,13 +8371,50 @@ function drawHeroHeldItemSide(x, y, side, bob) {
 }
 
 function drawSigns() {
-  currentSigns().forEach((sign) => {
-    rect(sign.x + 8, sign.y + 12, 5, 18, "#5d4037");
-    rect(sign.x, sign.y, 22, 16, "#b98252");
-    rect(sign.x + 2, sign.y + 3, 18, 2, "#e1b675");
-    rect(sign.x + 3, sign.y + 9, 13, 2, "#704633");
-  });
+  currentSigns().forEach((sign) => drawSignpost(sign));
   drawExamPracticeRooms();
+}
+
+// Stage 1 props: a 2.5D wooden signpost (replaces the old flat 22x16 board). Same anchor as
+// before — board around (sign.x, sign.y), post base at ~y+31 — so the interaction zone and
+// reachability are unchanged. Wood palette + top-left light to match buildings/tiles.
+function drawSignpost(sign) {
+  const x = sign.x, y = sign.y;
+  const woodSh = "#5c362d", woodBase = "#8f5b3f", woodLt = "#b77752", woodSpec = "#c98a60";
+  const postBase = "#6a4a32", postLt = "#825d40", postDk = "#4a3020";
+  const ink = "#1b232c";
+  // ground contact shadow (shared directional light)
+  drawCastShadow(x + 11, y + 31, 11, OBJECT_HEIGHTS.prop, 0.9);
+  // --- post ---
+  rect(x + 6, y + 12, 11, 21, ink);
+  rect(x + 7, y + 13, 9, 20, postBase);
+  rect(x + 7, y + 13, 3, 20, postLt);   // lit left face
+  rect(x + 13, y + 13, 3, 20, postDk);  // shaded right face
+  rect(x + 10, y + 18, 1, 12, "#5a3b28"); // grain line
+  // --- board (framed planks) ---
+  rect(x - 4, y - 5, 30, 22, ink);
+  rect(x - 3, y - 4, 28, 20, woodBase);
+  // two planks split by a groove
+  rect(x - 3, y - 4, 28, 9, woodBase);
+  rect(x - 3, y + 6, 28, 10, shadeHex(woodBase, -8));
+  rect(x - 3, y + 5, 28, 1, woodSh);     // plank groove
+  // light/shade faces (top-left light)
+  rect(x - 3, y - 4, 28, 2, woodSpec);   // lit top edge
+  rect(x - 3, y - 4, 4, 20, woodLt);     // lit left edge
+  rect(x + 21, y - 4, 4, 20, shadeHex(woodBase, -22)); // shaded right edge
+  rect(x - 3, y + 14, 28, 2, woodSh);    // shaded bottom edge
+  // wood grain flecks
+  rect(x + 4, y - 1, 9, 1, shadeHex(woodBase, 10));
+  rect(x + 6, y + 9, 11, 1, shadeHex(woodBase, -14));
+  rect(x + 2, y + 2, 5, 1, woodLt);
+  // carved "text" lines (reads as a notice)
+  rect(x + 2, y - 1, 16, 2, woodSh);
+  rect(x + 2, y + 9, 12, 2, woodSh);
+  // corner nail studs
+  [[x - 1, y - 2], [x + 22, y - 2], [x - 1, y + 13], [x + 22, y + 13]].forEach(([nx, ny]) => {
+    rect(nx, ny, 2, 2, "#3a2a20");
+    rect(nx, ny, 1, 1, woodSpec);
+  });
 }
 
 function drawBuildingDoors() {
