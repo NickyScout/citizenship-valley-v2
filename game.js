@@ -6485,8 +6485,8 @@ function drawPavingEdges(x, y, top, right, bottom, left, row, col) {
 let cobbleTiles = null;
 function buildCobbleTiles() {
   const T = LOGICAL_TILE; // 32
-  const tones = ["#5b5e54", "#696c62", "#777a70", "#868980", "#969990", "#a6a99e"];
-  const mortar = "#3c3f38";
+  const tones = ["#9a9d94", "#abaea5", "#bbbeb5", "#cacdc4", "#d8dbd2", "#e6e9e0"];
+  const mortar = "#6f7168";
   const out = [];
   for (let v = 0; v < 6; v += 1) {
     const cv = document.createElement("canvas");
@@ -6496,7 +6496,7 @@ function buildCobbleTiles() {
     let s = (v * 2654435761 + 40503) >>> 0;
     const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
     const drawPeb = (px, py, r, tone) => {
-      c.fillStyle = "#2c2e29"; // mortar shadow under the stone (lower-right)
+      c.fillStyle = "#62645c"; // mortar shadow under the stone (lower-right)
       c.beginPath(); c.ellipse(px + 0.6, py + 0.8, r + 0.9, r + 0.7, 0, 0, Math.PI * 2); c.fill();
       c.fillStyle = tone;
       c.beginPath(); c.ellipse(px, py, r, r * 0.92, 0, 0, Math.PI * 2); c.fill();
@@ -6531,9 +6531,8 @@ function buildCobbleTiles() {
 
 function drawTile(ch, x, y, row = 0, col = 0, map = currentMap()) {
   const kind = tileKind(ch);
-  // Road renders from the clean procedural cobble below (not tile-road.png): the PNG has a
-  // lighter per-tile border that tiles into a visible grid, which read as an uneven/"lopsided"
-  // surface. The procedural cobble is seam-free and even. Other kinds still use their PNGs.
+  // Road is handled by the ","/":" block below (a windowed draw of the large seamless
+  // tile-road.png, not the standard squish-to-tile path), so skip drawTileAsset for it.
   if (kind !== "road" && drawTileAsset(kind, x, y)) {
     drawTileVariation(kind, x, y, row, col);
     drawTileEdges(kind, x, y, row, col, map);
@@ -6570,20 +6569,29 @@ function drawTile(ch, x, y, row = 0, col = 0, map = currentMap()) {
     return;
   }
   if (ch === "," || ch === ":") {
-    // Grey cobblestone road/path: seamless pre-rendered variants (no grid, no beige). Variant
-    // + mirror chosen by a scattered hash of the world position so neighbours differ (no row
-    // banding); the 6 variants x 4 flips give 24 combos. Plaza ":" gets a faint lighten.
-    if (!cobbleTiles) cobbleTiles = buildCobbleTiles();
-    const idx = Math.floor(hashNoise(col, row, 7) * cobbleTiles.length) % cobbleTiles.length;
-    const flipX = hashNoise(col, row, 8) > 0.5;
-    const flipY = hashNoise(row, col, 9) > 0.5;
-    const T = LOGICAL_TILE;
-    ctx.save();
-    ctx.translate(x + (flipX ? T : 0), y + (flipY ? T : 0));
-    ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
-    ctx.drawImage(cobbleTiles[idx], 0, 0);
-    ctx.restore();
-    if (ch === ":") rect(x, y, T, T, "rgba(232,236,240,.08)");
+    // Grey cobblestone road/path. The road art (tile-road.png) is a large seamless texture;
+    // we draw a 32px WINDOW of it per tile keyed to world position, so the stones stay chunky
+    // and the repeat is spread over many tiles (no per-tile grid, no detail-crushing rescale).
+    // Falls back to the procedural cobble variants until the PNG has decoded.
+    const roadImg = getAssetImage(TILE_ASSETS.road);
+    if (roadImg && roadImg.complete && roadImg.naturalWidth) {
+      const tw = roadImg.naturalWidth, th = roadImg.naturalHeight;
+      const sx = ((col * LOGICAL_TILE) % tw + tw) % tw;
+      const sy = ((row * LOGICAL_TILE) % th + th) % th;
+      ctx.drawImage(roadImg, sx, sy, LOGICAL_TILE, LOGICAL_TILE, x, y, LOGICAL_TILE, LOGICAL_TILE);
+    } else {
+      if (!cobbleTiles) cobbleTiles = buildCobbleTiles();
+      const idx = Math.floor(hashNoise(col, row, 7) * cobbleTiles.length) % cobbleTiles.length;
+      const flipX = hashNoise(col, row, 8) > 0.5;
+      const flipY = hashNoise(row, col, 9) > 0.5;
+      const T = LOGICAL_TILE;
+      ctx.save();
+      ctx.translate(x + (flipX ? T : 0), y + (flipY ? T : 0));
+      ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+      ctx.drawImage(cobbleTiles[idx], 0, 0);
+      ctx.restore();
+    }
+    if (ch === ":") rect(x, y, LOGICAL_TILE, LOGICAL_TILE, "rgba(232,236,240,.10)");
     drawTileEdges(kind, x, y, row, col, map);
     return;
   }
