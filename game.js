@@ -6571,16 +6571,27 @@ function drawTile(ch, x, y, row = 0, col = 0, map = currentMap()) {
   if (ch === "," || ch === ":") {
     // Grey cobblestone road/path. The road art (tile-road.png) is a large seamless texture;
     // we sample a ROAD_SRC-px WINDOW of it per tile and shrink it into the 32px tile, so the
-    // cobbles read smaller (not "boulders") while the repeat is still spread over many tiles
-    // (no per-tile grid). ROAD_SRC divides the 384px texture so the window wraps seamlessly.
-    // Falls back to the procedural cobble variants until the PNG has decoded.
+    // cobbles read smaller (not "boulders") while the repeat is spread over many tiles (no
+    // per-tile grid). The window is drawn in up-to-4 quadrants so it WRAPS the texture edge
+    // cleanly (any ROAD_SRC stays seamless). Falls back to procedural cobble until decoded.
     const roadImg = getAssetImage(TILE_ASSETS.road);
     if (roadImg && roadImg.complete && roadImg.naturalWidth) {
-      const ROAD_SRC = 48; // source window px shrunk into LOGICAL_TILE (48->32 = ~33% smaller stones)
+      const ROAD_SRC = 56; // source window px shrunk into LOGICAL_TILE (56->32 = smaller stones)
       const tw = roadImg.naturalWidth, th = roadImg.naturalHeight;
+      const T = LOGICAL_TILE;
       const sx = ((col * ROAD_SRC) % tw + tw) % tw;
       const sy = ((row * ROAD_SRC) % th + th) % th;
-      ctx.drawImage(roadImg, sx, sy, ROAD_SRC, ROAD_SRC, x, y, LOGICAL_TILE, LOGICAL_TILE);
+      const scale = T / ROAD_SRC;
+      const wRight = Math.min(ROAD_SRC, tw - sx), wWrap = ROAD_SRC - wRight;
+      const hBot = Math.min(ROAD_SRC, th - sy), hWrap = ROAD_SRC - hBot;
+      const seg = (ssx, ssy, sw, sh, dxoff, dyoff) => {
+        if (sw <= 0 || sh <= 0) return;
+        ctx.drawImage(roadImg, ssx, ssy, sw, sh, x + dxoff * scale, y + dyoff * scale, sw * scale, sh * scale);
+      };
+      seg(sx, sy, wRight, hBot, 0, 0);
+      if (wWrap > 0) seg(0, sy, wWrap, hBot, wRight, 0);
+      if (hWrap > 0) seg(sx, 0, wRight, hWrap, 0, hBot);
+      if (wWrap > 0 && hWrap > 0) seg(0, 0, wWrap, hWrap, wRight, hBot);
     } else {
       if (!cobbleTiles) cobbleTiles = buildCobbleTiles();
       const idx = Math.floor(hashNoise(col, row, 7) * cobbleTiles.length) % cobbleTiles.length;
