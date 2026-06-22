@@ -7089,9 +7089,9 @@ function drawBuilding(x, y, w, h, wall, roof, label, kind, doorSide = "bottom") 
 // Drawn at (person.x-8, person.y-24) so the 48x72 cell's feet land on the procedural baseline.
 let villagerBaseData = null; // {w,h,data} read once from the decoded PNG
 const villagerTintCache = {};
-// Chest kits shift up/right onto the villager torso; head pieces (police helmet, book
-// glasses) use hy. Tuned to the measured villager anatomy (head y8..26, torso y34..61).
-const VILLAGER_KIT_ANCHOR = { dx: 3, dy: -5, hy: -10 };
+// Chest kits shift onto the villager torso; head pieces (police helmet, book glasses) use
+// hy. Tuned to the measured villager anatomy (head y8..26, eyes ~y20, torso y34..61).
+const VILLAGER_KIT_ANCHOR = { dx: 3, dy: -3, hy: -8 };
 
 function rgbFromHex(hex) {
   const h = String(hex || "#808080").replace("#", "");
@@ -7133,18 +7133,24 @@ function getTintedVillager(skinHex, hairHex, coatHex) {
     if (a < 128) { o[i + 3] = 0; continue; }
     const r = data[i], g = data[i + 1], b = data[i + 2];
     const lum = (r + g + b) / 3;
+    const chroma = Math.max(r, g, b) - Math.min(r, g, b);
     const cy = Math.floor((i >> 2) / w) % cellH;
     let tr, tg, tb;
-    if (Math.max(r, g, b) - Math.min(r, g, b) <= 30) {       // clothing (neutral grey) -> coat
-      const s = lum / 192;
-      tr = coat.r * s; tg = coat.g * s; tb = coat.b * s;
-    } else if (r > 150 && r > b + 30) {                       // skin -> tone
+    if (chroma <= 30) {
+      // Neutral pixels: keep the dark outline + eyes (so they don't take the coat colour),
+      // tint the rest (the grey tunic) to the coat colour.
+      if (lum < 64) { tr = r; tg = g; tb = b; }
+      else { const s = lum / 192; tr = coat.r * s; tg = coat.g * s; tb = coat.b * s; }
+    } else if (lum >= 110) {
+      // Light warm pixels are SKIN (including shaded jaw/neck) -> skin tone.
       const s = lum / 200;
       tr = skin.r * s; tg = skin.g * s; tb = skin.b * s;
-    } else if (r > b + 8 && cy < 34) {                        // hair (upper region) -> colour
+    } else if (cy < 40) {
+      // Dark warm pixels in the head region are HAIR -> hair colour.
       const s = lum / 70;
       tr = hair.r * s; tg = hair.g * s; tb = hair.b * s;
-    } else {                                                  // shoes / dark outline -> keep
+    } else {
+      // Dark warm pixels lower down (shoes) -> keep.
       tr = r; tg = g; tb = b;
     }
     o[i] = tr > 255 ? 255 : tr;
@@ -7157,8 +7163,10 @@ function getTintedVillager(skinHex, hairHex, coatHex) {
   return cv;
 }
 
-// Draw an NPC as the recoloured villager sprite (front/down facing) plus its role kit,
-// breathing with the shared idle sway. Returns false (procedural fallback) until ready.
+// Draw an NPC as the recoloured villager sprite (front/down facing) plus a per-NPC hairstyle
+// overlay (restores bun/ponytail/wrap/coily/beard identity + portrait sync) and its role kit,
+// breathing with the shared idle sway and a subtle per-NPC build. Returns false (procedural
+// fallback) until the sheet is ready.
 function drawNpcVillagerSprite(person, style) {
   if (!villagerSprite.isReady()) return false;
   const sheet = getTintedVillager(style.skin, style.hair, style.coat);
@@ -7168,10 +7176,20 @@ function drawNpcVillagerSprite(person, style) {
   const sway = rm ? 0 : Math.round(0.9 + 0.9 * Math.sin(animationClockMs / (speaking ? 360 : 760) + style.animPhase));
   const dx = Math.round(person.x) - 8;
   const dy = Math.round(person.y) - 24;
+  const cx = person.x + 16;
+  ctx.save();
+  // subtle per-NPC build: squash/stretch width ~5% around the body centre + feet, so the
+  // sprite and the overlays below scale together (alignment preserved).
+  ctx.translate(cx, person.y);
+  ctx.scale(1 + style.build * 0.05, 1);
+  ctx.translate(-cx, -person.y);
   if (sway) ctx.translate(0, -sway);
   ctx.drawImage(sheet, 0, 0, 48, 72, dx, dy, 48, 72); // row 0 (down), frame 0 (standing)
+  // hairstyle silhouette over the sprite head (head crown ~person.y-16, face below).
+  drawNpcHair({ x: person.x + 2, y: person.y - 15, color: person.color }, style);
+  if (style.beard) drawNpcBeard({ x: person.x + 2, y: person.y - 12, color: person.color }, style);
   drawNpcRoleKit(person, style.role, style, VILLAGER_KIT_ANCHOR);
-  if (sway) ctx.translate(0, sway);
+  ctx.restore();
   return true;
 }
 
@@ -7391,6 +7409,9 @@ function drawNpcRoleKit(p, role, style, anchor) {
   // Head pieces (police helmet, book glasses) reference hy so they ride higher on the
   // taller villager sprite; with no anchor (procedural body) hy === y, so nothing moves.
   const hy = p.y + (anchor ? anchor.hy : 0);
+  // On the villager sprite (anchor present) the narrow body can't hold the old wide-reach
+  // hand props, so they're skipped — each role keeps a chest/head identifier instead.
+  const spriteMode = Boolean(anchor);
   const gold = "#f2c14e", goldDk = "#b8881f";
   const paper = "#f5f0df";
   const ink = "#243140";
@@ -7470,9 +7491,11 @@ function drawNpcRoleKit(p, role, style, anchor) {
     rect(x + 10, y + 24, 6, 1, "#8f8576");
     rect(x + 10, y + 26, 5, 1, "#8f8576");
     // camera in right hand
-    rect(x + 22, y + 27, 9, 6, "#2b333a");
-    rect(x + 24, y + 28, 4, 4, "#7fb0f5");
-    rect(x + 29, y + 26, 2, 2, "#1b2228");
+    if (!spriteMode) {
+      rect(x + 22, y + 27, 9, 6, "#2b333a");
+      rect(x + 24, y + 28, 4, 4, "#7fb0f5");
+      rect(x + 29, y + 26, 2, 2, "#1b2228");
+    }
     return;
   }
   if (role === "book") {
@@ -7484,21 +7507,25 @@ function drawNpcRoleKit(p, role, style, anchor) {
     rect(x + 11, hy + 9, 4, 1, ink);
     // shirt collar (at the neckline, below the chin) + book under the left arm
     rect(x + 8, y + 18, 10, 2, "#7a5a44");
-    rect(x - 6, y + 25, 13, 12, "#6f4633");
-    rect(x - 5, y + 26, 5, 10, paper);
-    rect(x + 1, y + 26, 5, 10, "#e7dcc4");
-    rect(x - 1, y + 26, 1, 10, "#b6a98a");
+    if (!spriteMode) {
+      rect(x - 6, y + 25, 13, 12, "#6f4633");
+      rect(x - 5, y + 26, 5, 10, paper);
+      rect(x + 1, y + 26, 5, 10, "#e7dcc4");
+      rect(x - 1, y + 26, 1, 10, "#b6a98a");
+    }
     return;
   }
   if (role === "data") {
     // pocket pen + clipboard with a mini bar chart
     rect(x + 8, y + 16, 2, 5, "#5da9e9");
-    rect(x + 21, y + 22, 13, 16, "#33424b");
-    rect(x + 23, y + 24, 9, 11, "#e9eef0");
-    rect(x + 24, y + 26, 6, 1, ink);
-    rect(x + 24, y + 31, 2, 3, "#6fbf73");
-    rect(x + 27, y + 29, 2, 5, "#5da9e9");
-    rect(x + 30, y + 27, 2, 7, gold);
+    if (!spriteMode) {
+      rect(x + 21, y + 22, 13, 16, "#33424b");
+      rect(x + 23, y + 24, 9, 11, "#e9eef0");
+      rect(x + 24, y + 26, 6, 1, ink);
+      rect(x + 24, y + 31, 2, 3, "#6fbf73");
+      rect(x + 27, y + 29, 2, 5, "#5da9e9");
+      rect(x + 30, y + 27, 2, 7, gold);
+    }
     return;
   }
   if (role === "care") {
@@ -7516,10 +7543,12 @@ function drawNpcRoleKit(p, role, style, anchor) {
     // rosette + petition board in the right hand (no cap — campaign NPCs show their hair)
     rect(x + 6, y + 17, 5, 5, red);
     rect(x + 7, y + 18, 3, 3, "#f0998d");
-    rect(x + 22, y + 21, 12, 15, paper);
-    rect(x + 24, y + 23, 8, 2, ink);
-    rect(x + 24, y + 27, 8, 1, "#8f8576");
-    rect(x + 24, y + 30, 6, 1, "#8f8576");
+    if (!spriteMode) {
+      rect(x + 22, y + 21, 12, 15, paper);
+      rect(x + 24, y + 23, 8, 2, ink);
+      rect(x + 24, y + 27, 8, 1, "#8f8576");
+      rect(x + 24, y + 30, 6, 1, "#8f8576");
+    }
     return;
   }
   if (role === "time") {
@@ -7530,22 +7559,26 @@ function drawNpcRoleKit(p, role, style, anchor) {
     rect(x + 17, y + 18, 4, 13, hiVisDk);
     rect(x + 8, y + 18, 2, 13, "#eef0ea");
     rect(x + 16, y + 18, 2, 13, "#eef0ea");
-    rect(x + 22, y + 26, 10, 10, "#e9eef0");
-    rect(x + 24, y + 28, 6, 6, ink);
-    rect(x + 26, y + 24, 2, 3, "#8f8576");
-    rect(x + 26, y + 29, 2, 3, red);
+    if (!spriteMode) {
+      rect(x + 22, y + 26, 10, 10, "#e9eef0");
+      rect(x + 24, y + 28, 6, 6, ink);
+      rect(x + 26, y + 24, 2, 3, "#8f8576");
+      rect(x + 26, y + 29, 2, 3, red);
+    }
     return;
   }
   if (role === "exam") {
     // gown collar (at the neckline) + mark scheme + red pen in the right hand (no
     // mortarboard — examiner shows their hair in the portrait)
     rect(x + 7, y + 18, 11, 3, "#2a2533");
-    rect(x + 22, y + 24, 11, 14, paper);
-    rect(x + 24, y + 27, 7, 1, ink);
-    rect(x + 24, y + 30, 7, 1, ink);
-    rect(x + 24, y + 33, 4, 1, ink);
-    rect(x + 31, y + 22, 2, 9, red);
-    rect(x + 31, y + 21, 2, 2, "#cfc8b6");
+    if (!spriteMode) {
+      rect(x + 22, y + 24, 11, 14, paper);
+      rect(x + 24, y + 27, 7, 1, ink);
+      rect(x + 24, y + 30, 7, 1, ink);
+      rect(x + 24, y + 33, 4, 1, ink);
+      rect(x + 31, y + 22, 2, 9, red);
+      rect(x + 31, y + 21, 2, 2, "#cfc8b6");
+    }
     return;
   }
   // citizen: cozy scarf around the neck (below the chin so the mouth stays clear)
