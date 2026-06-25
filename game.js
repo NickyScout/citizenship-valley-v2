@@ -816,6 +816,24 @@ const NPC_TALK = {
   scribePip: "I'm Pip, the paragraph scribe. Strong answers are built from PEEL paragraphs: make a Point, give Evidence, Explain it, then Link back to the question. Ask me to help you structure a paragraph that scores."
 };
 
+// The player's chosen name, used so NPCs and quests address them directly.
+function playerName() {
+  const raw = state.profile && state.profile.name ? String(state.profile.name) : "";
+  const trimmed = raw.trim();
+  return trimmed || "Citizen";
+}
+
+// A short, varied vocative an NPC uses to greet the player by name. Deterministic
+// per NPC id so each villager keeps a consistent personality across talks.
+const NPC_GREETINGS = ["Good to see you", "Welcome back", "Ah, there you are", "Glad you stopped by", "Hello again"];
+function npcHail(npc) {
+  const key = npc && npc.id ? String(npc.id) : "";
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  const greet = NPC_GREETINGS[hash % NPC_GREETINGS.length];
+  return `${greet}, ${escapeHtml(playerName())}.`;
+}
+
 const PROFILE_PRESETS = [
   { id: "boySchool", label: "Schoolboy", gender: "boy", outfit: "schoolJumper", accent: "ember" },
   { id: "boyCampaign", label: "Campaigner", gender: "boy", outfit: "campaignBoots", accent: "forest" },
@@ -5844,7 +5862,7 @@ function acceptQuest(id) {
   updateHud();
   saveGame();
   hidePanel();
-  showDialogue(npcById(quest.giver).name, quest.brief, `Find ${target.name} and choose the quest question.`, "quest");
+  showDialogue(npcById(quest.giver).name, `${escapeHtml(playerName())}, here is your next task. ${quest.brief}`, `Find ${target.name} and choose the quest question.`, "quest");
 }
 
 function askQuestTarget(npc) {
@@ -5860,7 +5878,7 @@ function askQuestTarget(npc) {
   updateHud();
   saveGame();
   hidePanel();
-  showDialogue(npc.name, quest.clue, `Return to ${giver.name} and report back.`, "question");
+  showDialogue(npc.name, `Here is what I know, ${escapeHtml(playerName())}. ${quest.clue}`, `Return to ${giver.name} and report back.`, "question");
 }
 
 function showTurnInQuestion(npc) {
@@ -5879,7 +5897,7 @@ function answerQuest(index) {
   hidePanel();
   if (index !== quest.correct) {
     const giver = npcById(quest.giver);
-    showDialogue(giver.name, "Not quite \u2014 take another look, then report back.", "Open the report option and try again.", "wrong", questWhyExplanation(quest));
+    showDialogue(giver.name, `Not quite, ${escapeHtml(playerName())} \u2014 take another look, then report back.`, "Open the report option and try again.", "wrong", questWhyExplanation(quest));
     return;
   }
   completeQuest(quest);
@@ -5914,7 +5932,7 @@ function completeQuest(quest) {
   state.journal = `${quest.title} complete. Reward: ${rewardText}.${storyNote}${levelHint}`;
   updateHud();
   saveGame();
-  showDialogue(npcById(quest.giver).name, `Correct! Reward: ${rewardText}.${storyNote}${levelHint}`, "Choose another quest or equip your rewards.", "reward", questWhyExplanation(quest));
+  showDialogue(npcById(quest.giver).name, `Correct, ${escapeHtml(playerName())}! Reward: ${rewardText}.${storyNote}${levelHint}`, "Choose another quest or equip your rewards.", "reward", questWhyExplanation(quest));
 }
 
 function hasUniqueItem(id) {
@@ -10548,7 +10566,8 @@ choicePanel.addEventListener("click", (event) => {
     if (action === "back" && npc) showNpcMenu(npc);
     if (action === "talk" && npc) {
       hidePanel();
-      showDialogue(npc.name, NPC_TALK[npc.id] || npc.intro, "Press E to close.", "talk");
+      const baseTalk = NPC_TALK[npc.id] || npc.intro;
+      showDialogue(npc.name, `${npcHail(npc)} ${baseTalk}`, "Press E to close.", "talk");
     }
     if (action === "quests" && npc) showQuestList(npc);
     if (action === "askQuest" && npc) askQuestTarget(npc);
