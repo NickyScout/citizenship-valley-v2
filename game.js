@@ -1,5 +1,11 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
+// Keep pixel art crisp: the world is drawn at logical resolution then scaled up 1.5x
+// (RENDER_SCALE) inside the canvas. With smoothing on (the browser default) that upscale
+// blurs every sprite/tile, which makes NPCs look soft and "mushy". Nearest-neighbour keeps
+// the outlines sharp. (The CSS `image-rendering: pixelated` only governs the final
+// canvas->screen scale, not this internal ctx.scale.)
+ctx.imageSmoothingEnabled = false;
 const dialogue = document.getElementById("dialogue");
 const choicePanel = document.getElementById("choicePanel");
 const questText = document.getElementById("questText");
