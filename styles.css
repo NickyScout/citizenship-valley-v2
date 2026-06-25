@@ -3723,32 +3723,12 @@ kbd {
 
 .preset-avatar {
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 58px;
+  display: block;
   border: 1px solid rgba(255, 255, 255, .18);
+  background: #141c1f;
   overflow: hidden;
-}
-
-.preset-hair {
-  position: absolute;
-  left: 6px;
-  right: 6px;
-  top: 0;
-  height: 12px;
-  background: #7a3f28;
-}
-
-.preset-hair-girl {
-  height: 18px;
-  background: #8a3a64;
-}
-
-.preset-accent {
-  position: absolute;
-  left: 20px;
-  bottom: 4px;
-  width: 8px;
-  height: 16px;
 }
 
 .preset-label {

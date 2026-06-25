@@ -887,8 +887,7 @@ function heroVisual(profile = state.profile || defaultProfile()) {
   };
 }
 
-function heroPortraitHtml(sizeClass = "") {
-  const profile = state.profile || defaultProfile();
+function heroPortraitHtml(sizeClass = "", profile = state.profile || defaultProfile()) {
   const visual = heroVisual(profile);
   const style = `--hero-outfit:${visual.outfit.color};--hero-accent:${visual.accent};--hero-hair:${visual.hairColor};--hero-shoes:${visual.shoes};--hero-bag:${visual.bag};--hero-trim:${visual.trim};`;
   return `
@@ -10946,15 +10945,55 @@ function openCustomScreen() {
   if (nameInput && !nameInput.value) nameInput.value = state.profile?.name || "Citizen";
 }
 
+// A self-contained SVG avatar for each character-creation option, so every preset looks
+// genuinely distinct (its own hairstyle, hair colour, outfit colour, accent), independent of
+// the HUD portrait CSS. Hair shape is keyed to the preset's HERO_PRESET_VISUALS.hair.
+function presetAvatarSvg(preset) {
+  const v = HERO_PRESET_VISUALS[preset.id] || HERO_PRESET_VISUALS.boySchool;
+  const outfit = (ITEMS[preset.outfit] || ITEMS.schoolJumper).color;
+  const outfitDk = shadeHex(outfit, -22);
+  const accent = ACCENT_COLORS[preset.accent] || ACCENT_COLORS.ember;
+  const skin = preset.gender === "girl" ? "#f1c89e" : "#e9b487";
+  const hair = v.hairColor;
+  const ink = "#1b232c";
+  // body widens a touch for the "council" silhouette; head centre x=22
+  const bodyW = v.silhouette === "council" ? 26 : 22;
+  const bx = 22 - bodyW / 2;
+  let hairSvg = "";
+  switch (v.hair) {
+    case "bob":
+      hairSvg = `<path d="M11 20 Q11 7 22 7 Q33 7 33 20 L33 26 L29 26 L29 15 Q22 12 15 15 L15 26 L11 26 Z" fill="${hair}" stroke="${ink}" stroke-width="1.2"/>`; break;
+    case "long":
+      hairSvg = `<path d="M10 22 Q10 6 22 6 Q34 6 34 22 L34 34 L30 34 L30 14 Q22 11 14 14 L14 34 L10 34 Z" fill="${hair}" stroke="${ink}" stroke-width="1.2"/>`; break;
+    case "ponytail":
+      hairSvg = `<path d="M12 18 Q12 7 22 7 Q32 7 32 18 L32 20 L28 20 L28 13 Q22 11 16 13 L16 20 L12 20 Z" fill="${hair}" stroke="${ink}" stroke-width="1.2"/><path d="M32 14 q7 2 6 11 q-1 5 -4 6 q3 -6 0 -11 q-1 -4 -2 -6 Z" fill="${hair}" stroke="${ink}" stroke-width="1"/>`; break;
+    case "bun":
+      hairSvg = `<circle cx="22" cy="6" r="4.5" fill="${hair}" stroke="${ink}" stroke-width="1.2"/><path d="M12 18 Q12 8 22 8 Q32 8 32 18 L32 20 L28 20 L28 14 Q22 12 16 14 L16 20 L12 20 Z" fill="${hair}" stroke="${ink}" stroke-width="1.2"/>`; break;
+    case "cap":
+      hairSvg = `<path d="M12 13 Q12 6 22 6 Q32 6 32 13 L32 15 L12 15 Z" fill="${accent}" stroke="${ink}" stroke-width="1.2"/><rect x="30" y="13" width="7" height="3" rx="1.5" fill="${accent}" stroke="${ink}" stroke-width="1"/>`; break;
+    case "crest":
+      hairSvg = `<path d="M12 14 L14 6 L18 12 L22 4 L26 12 L30 6 L32 14 Z" fill="${hair}" stroke="${ink}" stroke-width="1.2"/>`; break;
+    case "parted":
+      hairSvg = `<path d="M12 14 Q12 7 22 7 Q32 7 32 14 L32 15 L23 15 L23 10 L21 10 L21 15 L12 15 Z" fill="${hair}" stroke="${ink}" stroke-width="1.2"/>`; break;
+    default: // short
+      hairSvg = `<path d="M12 14 Q12 7 22 7 Q32 7 32 14 L32 15 L12 15 Z" fill="${hair}" stroke="${ink}" stroke-width="1.2"/>`;
+  }
+  return `<svg viewBox="0 0 44 52" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" aria-hidden="true">`
+    + `<ellipse cx="22" cy="49" rx="13" ry="2.4" fill="rgba(0,0,0,.3)"/>`
+    + `<path d="M${bx} 50 L${bx} 34 Q22 26 ${22 + bodyW / 2} 34 L${22 + bodyW / 2} 50 Z" fill="${outfit}" stroke="${ink}" stroke-width="1.4"/>`
+    + `<rect x="${22 - bodyW / 2}" y="44" width="${bodyW}" height="6" fill="${outfitDk}"/>`
+    + `<rect x="19" y="30" width="6" height="5" fill="${accent}"/>`
+    + `<rect x="15" y="13" width="14" height="16" rx="5" fill="${skin}" stroke="${ink}" stroke-width="1.4"/>`
+    + `<rect x="18" y="20" width="2" height="2" fill="${ink}"/><rect x="24" y="20" width="2" height="2" fill="${ink}"/>`
+    + hairSvg
+    + `</svg>`;
+}
+
 function presetButtonHtml(preset) {
   const outfit = ITEMS[preset.outfit] || ITEMS.schoolJumper;
-  const accent = ACCENT_COLORS[preset.accent] || ACCENT_COLORS.ember;
   const isOn = preset.id === customSelection.presetId;
   return `<button type="button" class="preset-card${isOn ? " is-selected" : ""}" data-preset="${preset.id}">`
-    + `<span class="preset-avatar" style="background:${outfit.color}">`
-    + `<span class="preset-accent" style="background:${accent}"></span>`
-    + `<span class="preset-hair preset-hair-${preset.gender}"></span>`
-    + `</span>`
+    + `<span class="preset-avatar">${presetAvatarSvg(preset)}</span>`
     + `<span class="preset-label">${preset.label}</span>`
     + `<span class="preset-sub">${outfit.name}</span>`
     + `</button>`;
@@ -10965,9 +11004,9 @@ function ensureCustomControls() {
   if (!grid) { console.warn("[intro] presetGrid missing"); return; }
   const row = document.getElementById("accentRow");
   if (!row) { console.warn("[intro] accentRow missing"); return; }
-  if (!grid.querySelector("button[data-preset]")) {
-    grid.innerHTML = PROFILE_PRESETS.map(presetButtonHtml).join("");
-  }
+  // Always (re)build the preset grid from JS so the avatar art is single-sourced here; the
+  // static cards in index.html are only a no-JS fallback and must not win over this.
+  grid.innerHTML = PROFILE_PRESETS.map(presetButtonHtml).join("");
   if (!row.querySelector("button[data-accent]")) {
     row.innerHTML = Object.entries(ACCENT_COLORS).map(([id, color]) => (
       `<button type="button" class="swatch" data-accent="${id}" style="background:${color}" aria-label="${id} accent"></button>`
