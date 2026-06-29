@@ -9,6 +9,8 @@ ctx.imageSmoothingEnabled = false;
 const dialogue = document.getElementById("dialogue");
 const choicePanel = document.getElementById("choicePanel");
 const questText = document.getElementById("questText");
+const questGuideText = document.getElementById("questGuideText");
+const questProgressText = document.getElementById("questProgressText");
 const knowledgeText = document.getElementById("knowledgeText");
 const knowledgeBar = document.getElementById("knowledgeBar");
 const badgeList = document.getElementById("badgeList");
@@ -270,7 +272,7 @@ const STORY_BEATS = {
     region: "Citizenship Village",
     villain: "Apathy Shade",
     body: "A cold hush moves over the village noticeboard. The Citizen Scroll glows in your backpack: the valley is losing its sparks of participation, and the Exam Hall Castle will not open for passive citizens.",
-    objective: "Speak to local citizens, complete quests, and collect sparks by proving that rights, responsibilities, and evidence still matter."
+    objective: "Start in Citizenship Village: talk to Mayor Ada, choose Quests, complete village tasks, then pass the Travel Gate quiz to open the next region."
   },
   modernBritain: {
     act: 2,
@@ -1312,9 +1314,9 @@ function resetGame(options = {}) {
   state.activeQuest = null;
   state.pendingGate = null;
   state.lastDoorReturn = null;
-  state.quest = "Citizenship Village: complete all regional quests.";
-  state.journal = `Welcome, ${profile.name}. The Citizen Scroll glows in your pack.`;
-  setLocation("village");
+  state.quest = "Start here: talk to Mayor Ada outside Town Hall.";
+  state.journal = `Welcome, ${profile.name}. First minutes: press E near Mayor Ada, open Quests, and accept your first task.`;
+  setLocation("village", { preserveText: true });
   saveGame();
 }
 
@@ -3032,6 +3034,13 @@ function currentLocation() {
   return WORLD[state.currentLocation];
 }
 
+function questProgressForLocation(locationId = state.currentLocation) {
+  const location = WORLD[locationId];
+  const questIds = location?.questIds || [];
+  const done = questIds.filter((id) => state.completedQuests.has(id)).length;
+  return { location, total: questIds.length, done, left: Math.max(0, questIds.length - done) };
+}
+
 // Inside a shared interior, show the building the player entered (e.g. "Printworks")
 // instead of the generic interior location name (e.g. "Library Interior").
 function currentRegionDisplayName() {
@@ -3041,6 +3050,65 @@ function currentRegionDisplayName() {
 
 function isInteriorLocation(locationId = state.currentLocation) {
   return Boolean(INTERIOR_LOCATIONS[locationId]);
+}
+
+function locationObjectiveText(locationId = state.currentLocation) {
+  const location = WORLD[locationId];
+  if (!location) return "Continue your citizenship journey.";
+  if (state.activeQuest && getQuestLocationId(state.activeQuest.id) === locationId) {
+    const quest = QUESTS[state.activeQuest.id];
+    if (quest && state.activeQuest.stage === "travel") {
+      const target = npcById(quest.target);
+      return `${quest.title}: go to ${target.name}.`;
+    }
+    if (quest && state.activeQuest.stage === "return") {
+      const giver = npcById(quest.giver);
+      return `${quest.title}: return to ${giver.name}.`;
+    }
+  }
+  const progress = questProgressForLocation(locationId);
+  if (locationId === "village" && progress.done === 0) return "Start here: talk to Mayor Ada outside Town Hall.";
+  if (isInteriorLocation(locationId)) return `${currentRegionDisplayName()}: press E at each study station, then use the exit.`;
+  if (progress.total && progress.left > 0) {
+    return `${location.name}: help local NPCs and finish ${progress.left} more quest${progress.left === 1 ? "" : "s"}.`;
+  }
+  if (locationOrder.includes(locationId)) return `${location.name}: use the Travel Gate and answer 3 questions.`;
+  return `${location.name}: keep exploring and revising.`;
+}
+
+function questProgressSummaryText() {
+  if (isInteriorLocation(state.currentLocation)) return "Building task: use E at every study station.";
+  const progress = questProgressForLocation();
+  if (!progress.total) return "Progress updates appear here.";
+  const label = state.currentLocation === "village" ? "Village progress" : "Regional progress";
+  return `${label}: ${progress.done}/${progress.total} quests complete.`;
+}
+
+function nextStepsText() {
+  if (state.stats?.statPoints) return "Next step: open Character and spend your new stat point.";
+  if (isInteriorLocation(state.currentLocation)) {
+    return "Next step: press E at each study station for revision notes, then leave through the exit.";
+  }
+  if (state.activeQuest) {
+    const quest = QUESTS[state.activeQuest.id];
+    if (quest && state.activeQuest.stage === "travel") {
+      return `Next step: find ${npcById(quest.target).name}, press E, and answer the quest question.`;
+    }
+    if (quest && state.activeQuest.stage === "return") {
+      return `Next step: return to ${npcById(quest.giver).name}, press E, and turn in the quest.`;
+    }
+  }
+  if (state.currentLocation === "village") {
+    const village = questProgressForLocation("village");
+    if (village.done === 0) return "Next step: talk to Mayor Ada, choose Quests, and accept your first village task.";
+    if (village.left > 0) return `Next step: talk to village NPCs with quests and finish ${village.left} more to unlock the Travel Gate.`;
+    return "Next step: use the Travel Gate, answer 3 questions, and unlock the next region.";
+  }
+  const progress = questProgressForLocation();
+  if (progress.total && progress.left > 0) {
+    return `Next step: choose Quests from local NPCs and finish ${progress.left} more regional quest${progress.left === 1 ? "" : "s"}.`;
+  }
+  return "Next step: open Progress, Mini-games, or the Travel Gate to keep advancing.";
 }
 
 function currentSigns() {
@@ -3154,8 +3222,10 @@ function setLocation(locationId, options = {}) {
     state.player.y = spawn.y;
   }
   if (!options.preserveText) {
-    state.quest = locationOrder.includes(locationId) ? `${location.name}: complete all regional quests.` : `${location.name}: revise the study stations inside.`;
-    state.journal = `Arrived at ${location.name}.`;
+    state.quest = locationObjectiveText(locationId);
+    state.journal = locationId === "village"
+      ? "Press E near Mayor Ada to begin, then use Quests to accept your first task."
+      : `Arrived at ${location.name}. ${nextStepsText()}`;
   }
   if (!isInteriorLocation(locationId)) state.lastDoorReturn = null;
   if (devLocationSelect && locationOrder.includes(locationId)) devLocationSelect.value = locationId;
@@ -3518,6 +3588,8 @@ function updateHud() {
   knowledgeText.textContent = `${state.knowledge}/100`;
   knowledgeBar.style.width = `${state.knowledge}%`;
   questText.textContent = state.quest;
+  if (questGuideText) questGuideText.textContent = nextStepsText();
+  if (questProgressText) questProgressText.textContent = questProgressSummaryText();
   journalText.textContent = state.journal;
   outfitText.textContent = ITEMS[state.equipped.outfit]?.name || "None";
   toolText.textContent = ITEMS[state.equipped.tool]?.name || "None";
@@ -5243,11 +5315,11 @@ function useItem(id) {
     awardStats({ focus: item.effect?.focus || 0, knowledge: item.effect?.knowledge || 0 });
     state.journal = `${item.name} used. Focus restored to ${Math.round(state.stats.focus)}/100.`;
   } else if (item.effect?.openProgress) {
-    state.journal = `Notebook opened. Current objective: ${state.quest}`;
+    state.journal = `Notebook opened. Current objective: ${locationObjectiveText()}`;
     openProgressPanel(item.effect.openProgress);
   } else if (item.effect?.storyHint) {
     const beat = Object.values(STORY_BEATS).find((entry) => entry.act === state.storyAct) || STORY_BEATS.intro;
-    state.journal = `Citizen Scroll: ${beat.objective}`;
+    state.journal = `Citizen Scroll: ${beat.objective} ${nextStepsText()}`;
     openProgressPanel("story");
   } else {
     return;
@@ -5946,9 +6018,7 @@ function completeQuest(quest) {
   if (questId) state.completedQuests.add(questId);
   if (questId) scheduleReview(questId);
   state.activeQuest = null;
-  const location = currentLocation();
-  const unfinished = location.questIds.filter((id) => !state.completedQuests.has(id)).length;
-  state.quest = unfinished ? `${location.name}: ${unfinished} quest${unfinished === 1 ? "" : "s"} left.` : `${location.name}: use Travel gate for 3 questions.`;
+  state.quest = locationObjectiveText(questLocationId);
   const levelHint = state.stats.statPoints ? " Open Character (C) to spend your new stat points." : "";
   const rewardText = itemRewardText({ items: addedItems, coins }, coins);
   state.journal = `${quest.title} complete. Reward: ${rewardText}.${storyNote}${levelHint}`;
