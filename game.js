@@ -221,6 +221,19 @@ const ACCENT_COLORS = {
   amber: "#f2c14e"
 };
 
+// Player-chosen skin tones (light -> deep). The default `light` value matches the baked
+// hero-base.png skin, so existing players are unchanged: getTintedHero() treats it as an
+// identity (no recolour) and only retints the sprite's skin pixels for the other tones.
+const PLAYER_SKIN_TONES = {
+  light: "#f0be8e",
+  fair: "#e3a877",
+  tan: "#c98b5d",
+  olive: "#a96f49",
+  brown: "#855636",
+  deep: "#5e3a28"
+};
+const DEFAULT_HERO_SKIN = PLAYER_SKIN_TONES.light;
+
 const STAT_KEYS = ["knowledge", "rhetoric", "empathy", "integrity"];
 const STAT_LABELS = {
   knowledge: "Knowledge",
@@ -885,7 +898,7 @@ const ACHIEVEMENTS = [
 ];
 
 function defaultProfile() {
-  return { name: "Citizen", presetId: "boySchool", gender: "boy", outfit: "schoolJumper", accent: "ember" };
+  return { name: "Citizen", presetId: "boySchool", gender: "boy", outfit: "schoolJumper", accent: "ember", skin: DEFAULT_HERO_SKIN };
 }
 
 function currentProfilePreset(profile = state.profile || defaultProfile()) {
@@ -897,11 +910,13 @@ function heroVisual(profile = state.profile || defaultProfile()) {
   const visual = HERO_PRESET_VISUALS[preset.id] || HERO_PRESET_VISUALS.boySchool;
   const outfit = ITEMS[profile.outfit] || ITEMS[preset.outfit] || { name: "School Jumper", color: "#2f638f" };
   const accentId = ACCENT_COLORS[profile.accent] ? profile.accent : preset.accent;
+  const skin = Object.values(PLAYER_SKIN_TONES).includes(profile.skin) ? profile.skin : DEFAULT_HERO_SKIN;
   return {
     preset,
     outfit,
     gender: profile.gender === "girl" || profile.gender === "boy" ? profile.gender : preset.gender,
     accent: ACCENT_COLORS[accentId] || ACCENT_COLORS.ember,
+    skin,
     hair: visual.hair,
     hairColor: visual.hairColor,
     shoes: visual.shoes,
@@ -913,7 +928,7 @@ function heroVisual(profile = state.profile || defaultProfile()) {
 
 function heroPortraitHtml(sizeClass = "", profile = state.profile || defaultProfile()) {
   const visual = heroVisual(profile);
-  const style = `--hero-outfit:${visual.outfit.color};--hero-accent:${visual.accent};--hero-hair:${visual.hairColor};--hero-shoes:${visual.shoes};--hero-bag:${visual.bag};--hero-trim:${visual.trim};`;
+  const style = `--hero-outfit:${visual.outfit.color};--hero-accent:${visual.accent};--hero-hair:${visual.hairColor};--hero-shoes:${visual.shoes};--hero-bag:${visual.bag};--hero-trim:${visual.trim};--hero-skin:${visual.skin};`;
   return `
     <span class="hero-portrait ${sizeClass} hero-hair-${visual.hair} hero-silhouette-${visual.silhouette}" style="${style}" role="img" aria-label="${escapeHtml(profile.name || "Citizen")} portrait">
       <span class="hero-portrait-shadow"></span>
@@ -944,7 +959,8 @@ function sanitiseProfile(input) {
   const gender = input.gender === "girl" || input.gender === "boy" ? input.gender : preset.gender;
   const outfit = ITEMS[input.outfit]?.type === "outfit" ? input.outfit : preset.outfit;
   const accent = ACCENT_COLORS[input.accent] ? input.accent : preset.accent;
-  return { name: safeName, presetId: preset.id, gender, outfit, accent };
+  const skin = Object.values(PLAYER_SKIN_TONES).includes(input.skin) ? input.skin : DEFAULT_HERO_SKIN;
+  return { name: safeName, presetId: preset.id, gender, outfit, accent, skin };
 }
 
 function sanitiseStats(input) {
@@ -7292,6 +7308,71 @@ const villagerTintCache = {};
 // hy. Tuned to the measured villager anatomy (head y8..26, eyes ~y20, torso y34..61).
 const VILLAGER_KIT_ANCHOR = { dx: 3, dy: -3, hy: -8 };
 
+// --- Player skin recolour of hero-base.png -------------------------------------------
+// The hero sheet bakes one skin tone. To honour the player's skin choice we retint ONLY the
+// skin pixels (warm + bright) of the sheet into a cached canvas, leaving hair, outfit, bag,
+// trousers and shoes untouched. The default tone equals the baked skin, so it returns the raw
+// image (identity) and existing players look exactly as before.
+let heroBaseData = null; // {w,h,data} read once from the decoded hero PNG
+const heroTintCache = {};
+
+function ensureHeroBaseData() {
+  if (heroBaseData) return true;
+  const img = getAssetImage(HERO_ASSETS.base);
+  if (!img || !img.complete || !img.naturalWidth) return false;
+  try {
+    const w = img.naturalWidth, h = img.naturalHeight;
+    const cv = document.createElement("canvas");
+    cv.width = w; cv.height = h;
+    const c = cv.getContext("2d");
+    c.drawImage(img, 0, 0);
+    heroBaseData = { w, h, data: c.getImageData(0, 0, w, h).data };
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Return a drawable sheet (image or offscreen canvas) for the hero recoloured to `skinHex`.
+// Default tone -> the raw image (no recolour). Other tones -> a cached, skin-only retint.
+function getTintedHero(skinHex) {
+  if (!skinHex || skinHex === DEFAULT_HERO_SKIN) {
+    const img = heroBaseSprite.image();
+    return img && img.complete && img.naturalWidth ? img : null;
+  }
+  if (heroTintCache[skinHex]) return heroTintCache[skinHex];
+  if (!ensureHeroBaseData()) return null;
+  const { w, h, data } = heroBaseData;
+  const cv = document.createElement("canvas");
+  cv.width = w; cv.height = h;
+  const c = cv.getContext("2d");
+  const out = c.createImageData(w, h);
+  const o = out.data;
+  const skin = rgbFromHex(skinHex);
+  for (let i = 0; i < data.length; i += 4) {
+    const a = data[i + 3];
+    if (a < 8) { o[i + 3] = 0; continue; }
+    const r = data[i], g = data[i + 1], b = data[i + 2];
+    const lum = (r + g + b) / 3;
+    const warm = r - b;
+    // Skin = warm (red over blue) AND bright. This cleanly separates the peachy face/hands
+    // from the brown hair/bag (mid/low luminance) and the cool blue top (b >= r).
+    if (warm > 20 && lum >= 150) {
+      const s = lum / 192; // preserve the baked face shading around the chosen base tone
+      const tr = skin.r * s, tg = skin.g * s, tb = skin.b * s;
+      o[i] = tr > 255 ? 255 : tr;
+      o[i + 1] = tg > 255 ? 255 : tg;
+      o[i + 2] = tb > 255 ? 255 : tb;
+    } else {
+      o[i] = r; o[i + 1] = g; o[i + 2] = b;
+    }
+    o[i + 3] = a;
+  }
+  c.putImageData(out, 0, 0);
+  heroTintCache[skinHex] = cv;
+  return cv;
+}
+
 function rgbFromHex(hex) {
   const h = String(hex || "#808080").replace("#", "");
   return { r: parseInt(h.slice(0, 2), 16) || 0, g: parseInt(h.slice(2, 4), 16) || 0, b: parseInt(h.slice(4, 6), 16) || 0 };
@@ -8127,7 +8208,11 @@ function drawHeroSpriteAsset(p, fallbackFrame, fallbackBob) {
   const frame = isHeroMoving() ? heroBaseSprite.frameIndex(animationClockMs) : 0;
   // The PNG cell is 48x72; draw it into the hero's 32x48 footprint (top-left at p.x,p.y),
   // nudged up 24px so the taller sprite's feet land on the same baseline as the footprint.
-  if (!heroBaseSprite.draw(Math.round(p.x) - 8, Math.round(p.y) - 24, { state: direction, frame, width: 48, height: 72 })) return false;
+  // The sheet is recoloured to the player's chosen skin tone (default tone = raw image).
+  const sheet = getTintedHero(state.profile?.skin);
+  if (!sheet) return false;
+  const row = heroBaseSprite.rows[direction] || 0;
+  ctx.drawImage(sheet, (frame % heroBaseSprite.frames) * 48, row * 72, 48, 72, Math.round(p.x) - 8, Math.round(p.y) - 24, 48, 72);
   const bob = isHeroMoving() ? (frame === 1 || frame === 3 ? 1 : 0) : fallbackBob;
   // Stage 1E: the PNG sprite is already full-colour, so the V1 procedural recolor overlays
   // (outfit/hair/cap/accent/arm/flag) are NOT drawn over it — only the held-tool indicator,
@@ -10973,12 +11058,14 @@ function openCustomScreen() {
 // A self-contained SVG avatar for each character-creation option, so every preset looks
 // genuinely distinct (its own hairstyle, hair colour, outfit colour, accent), independent of
 // the HUD portrait CSS. Hair shape is keyed to the preset's HERO_PRESET_VISUALS.hair.
-function presetAvatarSvg(preset) {
+function presetAvatarSvg(preset, skinOverride) {
   const v = HERO_PRESET_VISUALS[preset.id] || HERO_PRESET_VISUALS.boySchool;
   const outfit = (ITEMS[preset.outfit] || ITEMS.schoolJumper).color;
   const outfitDk = shadeHex(outfit, -22);
   const accent = ACCENT_COLORS[preset.accent] || ACCENT_COLORS.ember;
-  const skin = preset.gender === "girl" ? "#f1c89e" : "#e9b487";
+  // The avatar shows the player's chosen skin tone when one is supplied (live creation
+  // preview); otherwise it falls back to a gender-tinted default for static rendering.
+  const skin = skinOverride || (preset.gender === "girl" ? "#f1c89e" : "#e9b487");
   const hair = v.hairColor;
   const ink = "#1b232c";
   // body widens a touch for the "council" silhouette; head centre x=22
@@ -11018,7 +11105,7 @@ function presetButtonHtml(preset) {
   const outfit = ITEMS[preset.outfit] || ITEMS.schoolJumper;
   const isOn = preset.id === customSelection.presetId;
   return `<button type="button" class="preset-card${isOn ? " is-selected" : ""}" data-preset="${preset.id}">`
-    + `<span class="preset-avatar">${presetAvatarSvg(preset)}</span>`
+    + `<span class="preset-avatar">${presetAvatarSvg(preset, customSelection.skin)}</span>`
     + `<span class="preset-label">${preset.label}</span>`
     + `<span class="preset-sub">${outfit.name}</span>`
     + `</button>`;
@@ -11037,6 +11124,12 @@ function ensureCustomControls() {
       `<button type="button" class="swatch" data-accent="${id}" style="background:${color}" aria-label="${id} accent"></button>`
     )).join("");
   }
+  const skinRow = document.getElementById("skinRow");
+  if (skinRow) {
+    skinRow.innerHTML = Object.entries(PLAYER_SKIN_TONES).map(([id, color]) => (
+      `<button type="button" class="swatch" data-skin="${color}" style="background:${color}" aria-label="${id} skin tone"></button>`
+    )).join("");
+  }
   console.log("[intro] controls ready", grid.querySelectorAll("button[data-preset]").length, "presets");
 }
 
@@ -11046,6 +11139,9 @@ function syncCustomControls() {
   });
   document.querySelectorAll("#accentRow button[data-accent]").forEach((button) => {
     button.classList.toggle("is-selected", button.dataset.accent === customSelection.accent);
+  });
+  document.querySelectorAll("#skinRow button[data-skin]").forEach((button) => {
+    button.classList.toggle("is-selected", button.dataset.skin === customSelection.skin);
   });
 }
 
@@ -11070,11 +11166,22 @@ function handleAccentRowClick(event) {
   syncCustomControls();
 }
 
+function handleSkinRowClick(event) {
+  const btn = event.target.closest("button[data-skin]");
+  if (!btn) return;
+  console.log("[intro] skin clicked", btn.dataset.skin);
+  customSelection.skin = btn.dataset.skin;
+  // Rebuild the preset avatars so they preview the chosen skin tone, then refresh selection.
+  ensureCustomControls();
+  syncCustomControls();
+}
+
 const customSelection = {
   presetId: "boySchool",
   gender: "boy",
   outfit: "schoolJumper",
-  accent: "ember"
+  accent: "ember",
+  skin: DEFAULT_HERO_SKIN
 };
 
 function wireCustomScreen() {
@@ -11099,6 +11206,12 @@ function handleCustomScreenActivation(event) {
     handleAccentRowClick(event);
     return;
   }
+  const skinButton = event.target.closest("button[data-skin]");
+  if (skinButton) {
+    event.preventDefault();
+    handleSkinRowClick(event);
+    return;
+  }
   if (event.target.closest("#customBackBtn")) {
     event.preventDefault();
     console.log("[intro] back clicked");
@@ -11114,7 +11227,8 @@ function handleCustomScreenActivation(event) {
       presetId: customSelection.presetId,
       gender: customSelection.gender,
       outfit: customSelection.outfit,
-      accent: customSelection.accent
+      accent: customSelection.accent,
+      skin: customSelection.skin
     });
     document.getElementById("customScreen")?.classList.add("hidden");
     startGameNew(profile);

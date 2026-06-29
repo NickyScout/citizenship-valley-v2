@@ -224,7 +224,7 @@ canvas {
   top: 13%;
   width: 38%;
   height: 30%;
-  background: #f0be8e;
+  background: var(--hero-skin, #f0be8e);
   border: 2px solid #241b12;
   border-radius: 9px;
 }
